@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KaryaHub HRIS - Formulir Onboarding Mandiri</title>
+  
+  <!-- Font and Stylesheets -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/variables.css">
+  
+  <style>
+    :root {
+      --color-primary-dark: #0f766e;
+      --color-primary-light: #f0fdfa;
+      --color-primary: #14b8a6;
+      --color-bg: #f8fafc;
+      --color-text-main: #0f172a;
+      --color-text-sub: #475569;
+      --color-border: #e2e8f0;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .form-container {
+      width: 100%;
+      max-width: 720px;
+      background: white;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      padding: 40px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--color-primary-dark);
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-text-main);
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--color-text-sub);
+      line-height: 1.5;
+    }
+
+    .info-banner {
+      background-color: #f0fdfa;
+      border: 1px solid #ccfbf1;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .info-banner p {
+      font-size: 12px;
+      color: #0f766e;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-primary-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 28px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--color-primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background-color: var(--color-primary-dark);
+      border-radius: 2px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 20px;
+    }
+
+    .full-width {
+      grid-column: span 2;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-sub);
+    }
+
+    .form-input {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--color-text-main);
+      background-color: white;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-primary-dark);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+    }
+
+    textarea.form-input {
+      height: 80px;
+      resize: none;
+    }
+
+    .btn-submit {
+      width: 100%;
+      height: 48px;
+      background-color: var(--color-primary-dark);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 32px;
+      transition: background-color 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      background-color: #0d5c56;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    .success-card {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background-color: #d1fae5;
+      color: #10b981;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <div id="form-content">
+      <header>
+        <div class="logo">KaryaHub HRIS</div>
+        <h2 class="title">Formulir Pendaftaran Mandiri</h2>
+        <p class="subtitle">Silakan lengkapi formulir onboarding berikut secara akurat untuk proses registrasi kepegawaian Anda.</p>
+      </header>
+
+      <div class="info-banner">
+        <p><strong>Posisi yang Dituju:</strong> <span id="info-role" style="font-weight: bold;">-</span></p>
+        <p><strong>Divisi / Departemen:</strong> <span id="info-div" style="font-weight: bold;">-</span></p>
+      </div>
+
+      <form id="registration-form">
+        <!-- SECTION 1: IDENTITAS UTAMA -->
+        <div class="section-title">Identitas Utama</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="full_name">Nama Lengkap (Sesuai KTP) *</label>
+            <input type="text" class="form-input" id="full_name" required placeholder="Budi Santoso">
+          </div>
+          <div class="form-group">
+            <label for="email_kerja">Email Kerja (Untuk Akses Sistem) *</label>
+            <input type="email" class="form-input" id="email_kerja" required placeholder="budi.s@karyamaterial.com">
+          </div>
+        </div>
+
+        <!-- SECTION 2: PROFIL LEGAL -->
+        <div class="section-title">Profil Pribadi & Legal</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="nik_ktp">Nomor Induk Kependudukan (NIK KTP) *</label>
+            <input type="text" class="form-input" id="nik_ktp" required pattern="\d{16}" maxlength="16" placeholder="3201xxxxxxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label for="place_of_birth">Tempat Lahir *</label>
+            <input type="text" class="form-input" id="place_of_birth" required placeholder="Jakarta">
+          </div>
+          <div class="form-group">
+            <label for="date_of_birth">Tanggal Lahir *</label>
+            <input type="date" class="form-input" id="date_of_birth" required>
+          </div>
+          <div class="form-group">
+            <label for="gender">Jenis Kelamin *</label>
+            <select class="form-input" id="gender" required>
+              <option value="" disabled selected>Pilih jenis kelamin</option>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="religion">Agama *</label>
+            <select class="form-input" id="religion" required>
+              <option value="" disabled selected>Pilih agama</option>
+              <option value="Islam">Islam</option>
+              <option value="Kristen Protestan">Kristen Protestan</option>
+              <option value="Katolik">Katolik</option>
+              <option value="Hindu">Hindu</option>
+              <option value="Buddha">Buddha</option>
+              <option value="Khonghucu">Khonghucu</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="domicile_address">Alamat Domisili Lengkap *</label>
+            <textarea class="form-input" id="domicile_address" required placeholder="Jl. Kemang Raya No. 12, RT. 03/RW. 02, Jakarta Selatan"></textarea>
+          </div>
+        </div>
+
+        <!-- SECTION 3: KEUANGAN & BPJS -->
+        <div class="section-title">Finansial & Asuransi</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="bank_name">Nama Bank Penerima Gaji *</label>
+            <select class="form-input" id="bank_name" required>
+              <option value="" disabled selected>Pilih Bank</option>
+              <option value="BCA">BCA (Bank Central Asia)</option>
+              <option value="Mandiri">Bank Mandiri</option>
+              <option value="BNI">BNI (Bank Negara Indonesia)</option>
+              <option value="BRI">BRI (Bank Rakyat Indonesia)</option>
+              <option value="CIMB Niaga">CIMB Niaga</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bank_account_number">Nomor Rekening Bank *</label>
+            <input type="text" class="form-input" id="bank_account_number" required placeholder="5220xxxxxx">
+          </div>
+          <div class="form-group">
+            <label for="bank_account_holder">Nama Pemilik Rekening *</label>
+            <input type="text" class="form-input" id="bank_account_holder" required placeholder="Nama harus sesuai Buku Tabungan">
+          </div>
+          <div class="form-group">
+            <label for="npwp_number">Nomor NPWP</label>
+            <input type="text" class="form-input" id="npwp_number" placeholder="15 digit nomor NPWP">
+          </div>
+          <div class="form-group">
+            <label for="ptkp_status">Status Pajak (PTKP) *</label>
+            <select class="form-input" id="ptkp_status" required>
+              <option value="TK/0">TK/0 (Tidak Kawin, 0 Tanggungan)</option>
+              <option value="K/0">K/0 (Kawin, 0 Tanggungan)</option>
+              <option value="K/1">K/1 (Kawin, 1 Tanggungan)</option>
+              <option value="K/2">K/2 (Kawin, 2 Tanggungan)</option>
+              <option value="K/3">K/3 (Kawin, 3 Tanggungan)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bpjs_kesehatan_number">Nomor Kartu BPJS Kesehatan</label>
+            <input type="text" class="form-input" id="bpjs_kesehatan_number" placeholder="0001xxxxxxxx">
+          </div>
+          <div class="form-group full-width">
+            <label for="bpjs_naker_number">Nomor Kartu BPJS Ketenagakerjaan</label>
+            <input type="text" class="form-input" id="bpjs_naker_number" placeholder="12 digit nomor BPJSTK">
+          </div>
+        </div>
+
+        <!-- SECTION 4: emergency_contacts -->
+        <div class="section-title">Kontak Darurat</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="contact_name">Nama Kontak Darurat *</label>
+            <input type="text" class="form-input" id="contact_name" required placeholder="Siti Aminah">
+          </div>
+          <div class="form-group">
+            <label for="relation">Hubungan Keluarga *</label>
+            <select class="form-input" id="relation" required>
+              <option value="" disabled selected>Pilih hubungan</option>
+              <option value="Orang Tua">Orang Tua</option>
+              <option value="Suami / Istri">Suami / Istri</option>
+              <option value="Saudara Kandung">Saudara Kandung</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="phone_number">Nomor Telepon Darurat *</label>
+            <input type="text" class="form-input" id="phone_number" required placeholder="08xxxxxxxxxx">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <span>Kirim Formulir Pendaftaran</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- SUCCESS MESSAGE -->
+    <div id="success-message" class="success-card">
+      <div class="success-icon">✓</div>
+      <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 12px; color: #065f46;">Pendaftaran Berhasil!</h2>
+      <p style="font-size: 14px; color: #047857; line-height: 1.6; margin-bottom: 24px;">
+        Data registrasi Anda telah tersimpan dengan aman di sistem. Selanjutnya, tim HRD akan meninjau kelengkapan dokumen dan menentukan besaran gaji pokok sebelum menyetujui akun aktif Anda.
+      </p>
+      <p style="font-size: 12px; color: var(--color-text-sub);">
+        Anda dapat menutup halaman ini sekarang. Terima kasih!
+      </p>
+    </div>
+  </div>
+
+  <!-- Ionicons scripts -->
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  
+  <script>
+    // Parse URL query parameters
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    const role = decodeURIComponent(getQueryParam('role') || 'Staff Sales Counter');
+    const div = decodeURIComponent(getQueryParam('div') || 'Sales & Marketing');
+    const token = getQueryParam('token') || 'MOCK_TOKEN';
+
+    document.getElementById('info-role').innerText = role;
+    document.getElementById('info-div').innerText = div;
+
+    // Handle Form Submit
+    document.getElementById('registration-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const fullName = document.getElementById('full_name').value;
+      const email = document.getElementById('email_kerja').value;
+      const nik = document.getElementById('nik_ktp').value;
+      const placeOfBirth = document.getElementById('place_of_birth').value;
+      const dateOfBirth = document.getElementById('date_of_birth').value;
+      const gender = document.getElementById('gender').value;
+      const religion = document.getElementById('religion').value;
+      const address = document.getElementById('domicile_address').value;
+      
+      const bankName = document.getElementById('bank_name').value;
+      const bankAccNum = document.getElementById('bank_account_number').value;
+      const bankAccHolder = document.getElementById('bank_account_holder').value;
+      const npwp = document.getElementById('npwp_number').value;
+      const ptkp = document.getElementById('ptkp_status').value;
+      const bpjsHealth = document.getElementById('bpjs_kesehatan_number').value;
+      const bpjsNaker = document.getElementById('bpjs_naker_number').value;
+      
+      const emergencyName = document.getElementById('contact_name').value;
+      const emergencyRelation = document.getElementById('relation').value;
+      const emergencyPhone = document.getElementById('phone_number').value;
+
+      // Construct request object for HR approvals list
+      const newRequest = {
+        id: 'REQ_' + Math.random().toString(36).substring(2, 9).toUpperCase(),
+        name: fullName,
+        role: role,
+        division: div,
+        time: 'Baru saja',
+        type: 'Pendaftaran Mandiri',
+        tagClass: 'registration',
+        avatar: '', // blank to prompt letter initials
+        reason: 'Formulir pendaftaran mandiri diisi lengkap oleh karyawan baru. Silakan periksa berkas & verifikasi data.',
+        email: email,
+        salary: 0, // Admin will set this upon approval
+        contractType: 'PKWT',
+        // Profile properties
+        nikKtp: nik,
+        placeOfBirth: placeOfBirth,
+        dateOfBirth: dateOfBirth,
+        gender: gender,
+        religion: religion,
+        domicileAddress: address,
+        bankName: bankName,
+        bankAccountNumber: bankAccNum,
+        bankAccountHolder: bankAccHolder,
+        npwpNumber: npwp,
+        ptkpStatus: ptkp,
+        bpjsKesehatanNumber: bpjsHealth,
+        bpjsNakerNumber: bpjsNaker,
+        emergencyName: emergencyName,
+        emergencyRelation: emergencyRelation,
+        emergencyPhone: emergencyPhone
+      };
+
+      // Retrieve and update pending requests
+      const storedPending = localStorage.getItem('hris_pending_requests');
+      const pendingList = storedPending ? JSON.parse(storedPending) : [];
+      pendingList.unshift(newRequest);
+      localStorage.setItem('hris_pending_requests', JSON.stringify(pendingList));
+
+      // Hide form and display success card
+      document.getElementById('form-content').style.display = 'none';
+      document.getElementById('success-message').style.display = 'block';
+    });
+  </script>
+</body>
+</html>

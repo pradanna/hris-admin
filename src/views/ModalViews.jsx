@@ -1,0 +1,988 @@
+import React from 'react';
+
+export function ModalViews({
+  store,
+  activeModal,
+  setActiveModal,
+  selectedReqId,
+  setSelectedReqId,
+  selectedEmpName,
+  setSelectedEmpName,
+  selectedEmpDetail,
+  setSelectedEmpDetail,
+  renewDecision,
+  setRenewDecision,
+  renewEffectiveDate,
+  setRenewEffectiveDate,
+  renewEndDate,
+  setRenewEndDate,
+  renewSalary,
+  setRenewSalary,
+  renewNotes,
+  setRenewNotes,
+  rejectReason,
+  setRejectReason,
+  showInlineRejectInput,
+  setShowInlineRejectInput,
+  manualAbsenIn,
+  setManualAbsenIn,
+  manualAbsenOut,
+  setManualAbsenOut,
+  manualAbsenReason,
+  setManualAbsenReason,
+  addEmpName,
+  setAddEmpName,
+  addEmpEmail,
+  setAddEmpEmail,
+  addEmpRole,
+  setAddEmpRole,
+  addEmpDiv,
+  setAddEmpDiv,
+  addEmpContract,
+  setAddEmpContract,
+  addEmpStartDate,
+  setAddEmpStartDate,
+  addEmpEndDate,
+  setAddEmpEndDate,
+  addEmpSalary,
+  setAddEmpSalary,
+  editSalaryValue,
+  setEditSalaryValue,
+  editSalaryJabatan,
+  setEditSalaryJabatan,
+  editSalaryTransport,
+  setEditSalaryTransport,
+  editSalaryKasbon,
+  setEditSalaryKasbon,
+  editSalaryEffectiveDate,
+  setEditSalaryEffectiveDate,
+  editSalaryReason,
+  setEditSalaryReason,
+  editSalaryNotes,
+  setEditSalaryNotes,
+  selectedEmpId,
+  setSelectedEmpId,
+  currentUserRole,
+  handleDirectApprove,
+  showToast
+}) {
+  if (!activeModal) return null;
+
+  const req = store.pendingRequests.find(r => r.id === selectedReqId) || {};
+  const emp = store.employees.find(e => e.id === selectedEmpId) || {};
+
+  return (
+    <>
+      {/* Renew/Follow-up Contract Modal */}
+      {activeModal === 'renew' && (
+        <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1000, justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '500px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: 'white', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <ion-icon name="create-outline" style={{ color: 'var(--color-primary)' }}></ion-icon>
+              <span>Tindak Lanjuti Kontrak Karyawan</span>
+            </h3>
+
+            <div style={{ backgroundColor: 'var(--color-gray-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px', marginBottom: '8px' }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{selectedEmpName}</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>{selectedEmpDetail}</p>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Keputusan Kontrak</label>
+              <select className="form-input" value={renewDecision} onChange={(e) => setRenewDecision(e.target.value)}>
+                <option value="convert">Angkat Karyawan Tetap (PKWTT)</option>
+                <option value="extend">Perpanjang Kontrak (PKWT Baru)</option>
+                <option value="terminate">Selesaikan Kontrak (Selesai / Putus)</option>
+              </select>
+            </div>
+
+            {renewDecision === 'extend' && (
+              <div className="form-group">
+                <label className="form-label">Tanggal Berakhir Kontrak Baru</label>
+                <input type="date" className="form-input" value={renewEndDate} onChange={(e) => setRenewEndDate(e.target.value)} />
+              </div>
+            )}
+
+            {renewDecision !== 'terminate' && (
+              <div className="form-group">
+                <label className="form-label">Penyesuaian Gaji Pokok Baru (Gross IDR)</label>
+                <input type="number" className="form-input" value={renewSalary} onChange={(e) => setRenewSalary(parseInt(e.target.value) || 0)} />
+              </div>
+            )}
+
+            <div className="form-group">
+              <label className="form-label">Catatan / Evaluasi Kinerja (Opsional)</label>
+              <textarea className="form-input" value={renewNotes} onChange={(e) => setRenewNotes(e.target.value)} placeholder="Tulis evaluasi singkat..." style={{ height: '70px', resize: 'none' }}></textarea>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button className="pending-btn reject" onClick={() => setActiveModal(null)}>Batal</button>
+              <button className="pending-btn approve" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }} onClick={() => {
+                store.renewContract(selectedEmpName, renewDecision, renewEffectiveDate, renewEndDate, renewNotes, renewSalary);
+                setActiveModal(null);
+                showToast(`Keputusan kontrak untuk ${selectedEmpName} berhasil disimpan.`);
+              }}>
+                Simpan Keputusan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Request Modal */}
+      {activeModal === 'reject' && (
+        <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1001, justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '450px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'white' }}>
+            <h3 className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-danger)' }}>
+              <ion-icon name="close-circle-outline" style={{ fontSize: '22px' }}></ion-icon>
+              <span>Tolak Pengajuan</span>
+            </h3>
+
+            <div style={{ backgroundColor: 'var(--color-gray-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px' }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{req.name}</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>Pengajuan: {req.type}</p>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Alasan Penolakan (Wajib)</label>
+              <textarea className="form-input" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan penolakan secara jelas..." style={{ height: '100px', resize: 'none' }} required></textarea>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button className="pending-btn reject" onClick={() => setActiveModal(null)}>Batal</button>
+              <button className="pending-btn approve" style={{ backgroundColor: 'var(--color-danger)', color: 'white' }} onClick={() => {
+                if (!rejectReason.trim()) { alert('Alasan penolakan wajib diisi!'); return; }
+                store.rejectRequest(selectedReqId, rejectReason);
+                setActiveModal(null);
+                showToast(`Pengajuan untuk ${req.name} berhasil ditolak.`, 'error');
+              }}>
+                Tolak Pengajuan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Request Modal */}
+      {activeModal === 'detail' && (
+        <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1003, justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '800px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px', backgroundColor: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ion-icon name="document-text-outline" style={{ color: 'var(--color-primary)', fontSize: '24px' }}></ion-icon>
+                <h3 className="chart-title" style={{ margin: 0 }}>Detail Berkas & Persetujuan Karyawan</h3>
+              </div>
+              <button className="action-icon-btn" onClick={() => setActiveModal(null)} title="Tutup Modal">
+                <ion-icon name="close-outline" style={{ fontSize: '24px' }}></ion-icon>
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderBottom: '1px solid var(--color-border)', paddingBottom: '16px' }}>
+              <div>
+                <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)' }}>{req.name}</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>{req.role}</p>
+              </div>
+              <span className={`pending-tag ${req.tagClass}`} style={{ marginLeft: 'auto', padding: '6px 12px', borderRadius: '20px', fontWeight: 'bold' }}>{req.type}</span>
+            </div>
+
+            <div>
+              <label className="form-label" style={{ color: 'var(--color-gray-500)', fontSize: '11px', fontWeight: 600 }}>Keterangan Pengajuan</label>
+              <p style={{ fontSize: '12px', color: 'var(--text-main)', fontStyle: 'italic', backgroundColor: 'var(--color-gray-50)', padding: '12px 16px', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--color-primary)', marginTop: '6px', margin: 0 }}>
+                {req.reason}
+              </p>
+            </div>
+
+            {req.type === 'Pendaftaran Mandiri' && (
+              <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                
+                {/* Section 1: Profil Pribadi & Legal */}
+                <div>
+                  <h5 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '12px', borderBottom: '1px solid var(--color-border)', paddingBottom: '4px' }}>1. Profil Pribadi & Legal</h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '12px' }}>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>NIK KTP</label>
+                      <input type="text" className="form-input" value={req.nikKtp || '320102**********'} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Tempat & Tanggal Lahir</label>
+                      <input type="text" className="form-input" value={`${req.placeOfBirth || 'Jakarta'}, ${req.dateOfBirth || '1995-01-01'}`} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Jenis Kelamin / Agama</label>
+                      <input type="text" className="form-input" value={`${req.gender || 'Laki-laki'} / ${req.religion || 'Islam'}`} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Email Pribadi</label>
+                      <input type="text" className="form-input" value={req.email || '-'} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Alamat Domisili</label>
+                      <input type="text" className="form-input" value={req.domicileAddress || 'Jl. Raya No. 10, Jakarta'} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Finansial & BPJS */}
+                <div>
+                  <h5 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '12px', borderBottom: '1px solid var(--color-border)', paddingBottom: '4px' }}>2. Finansial & BPJS</h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '12px' }}>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Nama Bank & Rekening</label>
+                      <input type="text" className="form-input" value={`${req.bankName || 'BCA'} - ${req.bankAccountNumber || '5220******'}`} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Nama Pemilik Rekening</label>
+                      <input type="text" className="form-input" value={req.bankAccountHolder || req.name} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>NPWP / Status PTKP</label>
+                      <input type="text" className="form-input" value={`${req.npwpNumber || '-'} / ${req.ptkpStatus || 'TK/0'}`} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 3' }}>
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>BPJS Kesehatan & Ketenagakerjaan</label>
+                      <input type="text" className="form-input" value={`Kesehatan: ${req.bpjsKesehatanNumber || '-'}  |  Ketenagakerjaan: ${req.bpjsNakerNumber || '-'}`} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Struktur Jabatan & Kontak Darurat */}
+                <div>
+                  <h5 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '12px', borderBottom: '1px solid var(--color-border)', paddingBottom: '4px' }}>3. Kepegawaian & Kontak Darurat</h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '12px' }}>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Rencana Jabatan</label>
+                      <input type="text" className="form-input" value={req.role || '-'} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Divisi / Tipe Kontrak</label>
+                      <input type="text" className="form-input" value={`${req.division || '-'} (${req.contractType || 'PKWT'})`} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Kontak Darurat (Hubungan)</label>
+                      <input type="text" className="form-input" value={`${req.emergencyName || '-'} (${req.emergencyRelation || '-'})`} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 3' }}>
+                      <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Nomor Handphone Darurat</label>
+                      <input type="text" className="form-input" value={req.emergencyPhone || '-'} readOnly style={{ height: '36px', fontSize: '12px', backgroundColor: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #E2E8F0' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--color-gray-500)', backgroundColor: '#f8fafc', border: '1px solid var(--color-border)', padding: '12px', borderRadius: 'var(--radius-sm)', lineHeight: '1.4' }}>
+                  <strong>Catatan Sistem:</strong> Foto biometrik belum diunggah. Karyawan akan mengisi foto mandiri setelah akun diaktifkan. Gaji pokok wajib ditentukan oleh admin saat menyetujui pendaftaran ini.
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '24px', borderTop: '1px solid var(--color-border)', paddingTop: '16px', justifyContent: 'flex-end' }}>
+              <button className="pending-btn reject" onClick={() => { setRejectReason(''); setActiveModal('reject'); }} style={{ width: '160px', height: '40px', margin: 0, fontSize: '13px', fontWeight: 700 }}>Tolak Pengajuan</button>
+              <button className="pending-btn approve" style={{ width: '160px', height: '40px', margin: 0, fontSize: '13px', fontWeight: 700, backgroundColor: 'var(--color-primary)', color: 'white' }} onClick={() => handleDirectApprove(req.id)}>Setujui Pengajuan</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Detail & Persetujuan Pengajuan (Cuti / Izin / Lembur / Tugas Keluar) */}
+      {activeModal === 'leave_detail' && (
+        <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1003, justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '950px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px', backgroundColor: 'white', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ion-icon name="document-text-outline" style={{ color: 'var(--color-primary)', fontSize: '24px' }}></ion-icon>
+                <h3 className="chart-title" style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Detail Berkas & Persetujuan Pengajuan</h3>
+              </div>
+              <button className="action-icon-btn" onClick={() => { setActiveModal(null); setShowInlineRejectInput(false); setRejectReason(''); }} title="Tutup Modal" style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                <ion-icon name="close-outline" style={{ fontSize: '24px', color: 'var(--color-gray-400)' }}></ion-icon>
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: req.attachment ? '1.2fr 1fr' : '1fr', gap: '28px' }}>
+              {/* Sisi Kiri: Pratinjau (Preview) Foto Surat Dokter / Berkas Izin */}
+              {req.attachment && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label className="form-label" style={{ color: 'var(--color-gray-500)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dokumen / Lampiran Bukti Fisik</label>
+                  <div style={{ border: '1px solid var(--color-border)', borderRadius: '12px', overflow: 'hidden', backgroundColor: 'var(--color-gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '380px', padding: '10px' }}>
+                    <img 
+                      src={req.attachment} 
+                      alt="Lampiran Surat Dokter / Bukti Izin" 
+                      style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '8px' }} 
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Sisi Kanan: Ringkasan Data Pengajuan */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                <div style={{ backgroundColor: 'var(--color-gray-50)', padding: '16px', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+                  <div style={{ fontWeight: 800, fontSize: '16px', color: 'var(--text-main)' }}>{req.name}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 600 }}>{req.role}</div>
+                  <span className={`pending-tag ${req.tagClass || 'leave'}`} style={{ display: 'inline-block', marginTop: '10px', fontSize: '11px', padding: '4px 10px', borderRadius: '6px', fontWeight: 700, textTransform: 'uppercase' }}>
+                    {req.type}
+                  </span>
+                </div>
+
+                {/* Durasi & Jatah Saldo Grid (Customized by Tab Type) */}
+                {(() => {
+                  const isCutiSakit = req.type === 'Cuti Sakit';
+                  const isCutiTahunan = req.type.includes('Cuti') && !isCutiSakit;
+
+                  if (isCutiTahunan) {
+                    const matchDays = req.duration ? req.duration.match(/(\d+)\s*Hari/) : null;
+                    const durationDays = matchDays ? parseInt(matchDays[1], 10) : 0;
+                    const estimatedBalance = req.leaveBalance - durationDays;
+
+                    return (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Durasi Cuti</label>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>{req.duration || '-'}</div>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Saldo Sebelum Cuti</label>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>{req.leaveBalance} Hari</div>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Estimasi Saldo Akhir</label>
+                          <div style={{ fontSize: '13px', fontWeight: 800, color: estimatedBalance < 0 ? '#DC2626' : '#10B981', marginTop: '4px' }}>
+                            {estimatedBalance} Hari
+                            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 'normal', display: 'block', marginTop: '1px' }}>
+                              ({req.leaveBalance} - {durationDays} hari)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (isCutiSakit || req.type.includes('Izin')) {
+                    return (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Durasi & Tanggal Izin</label>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>{req.duration || '-'}</div>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Sakit / Izin Tahun Ini</label>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#D97706', marginTop: '4px' }}>3 Hari <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 'normal' }}>(Tidak memotong Cuti Tahunan)</span></div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (req.type === 'Lembur') {
+                    return (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Durasi Lembur</label>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-primary)', marginTop: '4px' }}>{req.duration || '-'}</div>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Estimasi Upah Lembur</label>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#10B981', marginTop: '4px' }}>Rp 150.000 <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 'normal' }}>(Simulasi hitung upah per jam)</span></div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Tugas Keluar / Dinas
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      <div>
+                        <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Durasi Penugasan</label>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>{req.duration || '-'}</div>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Uang Saku Dinas</label>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#10B981', marginTop: '4px' }}>Rp 250.000 <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 'normal' }}>(Simulasi allowance perjalanan dinas)</span></div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Keterangan / Alasan Karyawan</label>
+                  <p style={{ fontSize: '12px', color: 'var(--text-main)', backgroundColor: 'var(--color-gray-50)', padding: '12px 14px', borderRadius: '8px', borderLeft: '4px solid var(--color-primary)', marginTop: '6px', margin: 0, lineHeight: 1.5, fontStyle: 'italic' }}>
+                    "{req.reason}"
+                  </p>
+                </div>
+
+                {req.status !== 'Pending' && (
+                  <div style={{ marginTop: '8px', padding: '14px', borderRadius: '10px', backgroundColor: req.status === 'Approved' ? '#ECFDF5' : '#FEF2F2', border: `1px solid ${req.status === 'Approved' ? '#A7F3D0' : '#FECACA'}` }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: req.status === 'Approved' ? '#10B981' : '#DC2626', display: 'block' }}>
+                      Status Keputusan: {req.status === 'Approved' ? 'DISETUJUI' : 'DITOLAK'}
+                    </span>
+                    {req.rejectReason && (
+                      <p style={{ fontSize: '11px', color: '#DC2626', margin: '6px 0 0 0', fontWeight: 600 }}>Alasan Penolakan: "{req.rejectReason}"</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Inline Rejection Reason Field */}
+                {showInlineRejectInput && req.status === 'Pending' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#FEF2F2', padding: '16px', borderRadius: '12px', border: '1px solid #FECACA', animation: 'fadeIn 0.2s ease-in' }}>
+                    <label style={{ fontSize: '11px', color: '#DC2626', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Alasan Penolakan (Wajib Diisi)</label>
+                    <textarea
+                      placeholder="Masukkan alasan penolakan secara jelas..."
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '8px', border: '1px solid #FCA5A5', fontSize: '12px', outline: 'none', resize: 'vertical' }}
+                    />
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
+                      <button 
+                        className="pending-btn" 
+                        style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: 'white', border: '1px solid #D1D5DB', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+                        onClick={() => { setShowInlineRejectInput(false); setRejectReason(''); }}
+                      >
+                        Batal
+                      </button>
+                      <button 
+                        className="pending-btn" 
+                        disabled={!rejectReason.trim()}
+                        style={{ 
+                          padding: '6px 12px', 
+                          fontSize: '11px', 
+                          backgroundColor: '#DC2626', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '6px', 
+                          cursor: rejectReason.trim() ? 'pointer' : 'not-allowed', 
+                          fontWeight: 700,
+                          opacity: rejectReason.trim() ? 1 : 0.6
+                        }}
+                        onClick={() => {
+                          store.rejectRequest(req.id, rejectReason);
+                          setActiveModal(null);
+                          setShowInlineRejectInput(false);
+                          setRejectReason('');
+                          showToast(`Pengajuan ${req.type} untuk ${req.name} telah ditolak.`);
+                        }}
+                      >
+                        Konfirmasi Tolak
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {req.status === 'Pending' && !showInlineRejectInput && (
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', borderTop: '1px solid var(--color-border)', paddingTop: '16px', justifyContent: 'flex-end' }}>
+                <button 
+                  className="pending-btn reject" 
+                  onClick={() => { setShowInlineRejectInput(true); }} 
+                  style={{ width: '160px', height: '40px', margin: 0, fontSize: '13px', fontWeight: 700, border: '1px solid #DC2626', color: '#DC2626', background: 'white', borderRadius: '8px', cursor: 'pointer' }}
+                >
+                  Tolak Pengajuan
+                </button>
+                <button 
+                  className="pending-btn approve" 
+                  style={{ width: '160px', height: '40px', margin: 0, fontSize: '13px', fontWeight: 700, backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }} 
+                  onClick={() => {
+                    store.approveRequest(req.id);
+                    setActiveModal(null);
+                    showToast(`Pengajuan ${req.type} untuk ${req.name} berhasil disetujui.`);
+                  }}
+                >
+                  Setujui Pengajuan
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Input Absen Manual Modal */}
+      {activeModal === 'absen_manual' && (
+        <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1003, justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '460px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'white' }}>
+            <h3 className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ion-icon name="time-outline" style={{ color: 'var(--color-primary)', fontSize: '22px' }}></ion-icon>
+              <span>Input Absen Manual HR</span>
+            </h3>
+
+            <div style={{ backgroundColor: 'var(--color-gray-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px', marginTop: '8px' }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{selectedEmpName}</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>Penyelesaian Blocker Kehadiran</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className="form-group">
+                <label className="form-label">Jam Masuk (Clock In)</label>
+                <input type="time" className="form-input" value={manualAbsenIn} onChange={(e) => setManualAbsenIn(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Jam Keluar (Clock Out)</label>
+                <input type="time" className="form-input" value={manualAbsenOut} onChange={(e) => setManualAbsenOut(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Alasan Penyesuaian Manual</label>
+              <input type="text" className="form-input" value={manualAbsenReason} onChange={(e) => setManualAbsenReason(e.target.value)} />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+              <button className="pending-btn reject" onClick={() => setActiveModal(null)}>Batal</button>
+              <button className="pending-btn approve" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }} onClick={() => {
+                store.resolveBlocker(selectedEmpName, 'absen_manual', `${manualAbsenIn} - ${manualAbsenOut}`);
+                setActiveModal(null);
+                showToast(`Koreksi kehadiran manual untuk ${selectedEmpName} berhasil disimpan.`);
+              }}>
+                Simpan Kehadiran
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payslip Preview Modal */}
+      {activeModal === 'payslip' && (() => {
+        const empForPayslip = store.employees.find(e => e.name === selectedEmpName) || {};
+        const salary = empForPayslip.salary || 6500000;
+        const tunjanganJabatan = empForPayslip.tunjanganJabatan || Math.round(salary * 0.08);
+        const tunjanganTransport = empForPayslip.tunjanganTransport || Math.round(salary * 0.05);
+        const totalTunjangan = tunjanganJabatan + tunjanganTransport;
+        const potonganKasbon = empForPayslip.potonganKasbon || 0;
+        const pajakPph21 = Math.round(salary * 0.03);
+        const totalPotongan = potonganKasbon + pajakPph21;
+        const netPay = salary + totalTunjangan - totalPotongan;
+        const isLocked = empForPayslip.isSalaryLocked || false;
+
+        return (
+          <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1003, justifyContent: 'center', alignItems: 'center' }}>
+            <div className="glass-card" style={{ width: '580px', padding: '32px', backgroundColor: 'white', maxHeight: '90vh', overflowY: 'auto', borderRadius: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px dashed var(--color-border)', paddingBottom: '16px', marginBottom: '16px' }}>
+                <div>
+                  <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-primary)' }}>KaryaHub HRIS</h2>
+                  <p style={{ fontSize: '11px', color: isLocked ? 'var(--color-success-text)' : 'var(--text-secondary)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: isLocked ? 700 : 'normal' }}>
+                    <ion-icon name={isLocked ? "shield-checkmark-outline" : "document-text-outline"} style={{ fontSize: '14px' }}></ion-icon>
+                    <span>{isLocked ? 'Slip Gaji Resmi (Terkunci & Diterbitkan)' : 'Slip Gaji Sementara (Draf Payroll)'}</span>
+                  </p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 700 }}>Periode: Juli 2026</p>
+                </div>
+              </div>
+
+              <p style={{ fontSize: '13px', marginBottom: '16px' }}><strong>Nama Karyawan:</strong> {empForPayslip.name} ({empForPayslip.role})</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
+                <div>
+                  <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-success)', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px', marginBottom: '8px' }}>PENERIMAAN (+)</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                    <span>Gaji Pokok:</span>
+                    <span>Rp {salary.toLocaleString('id-ID')}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                    <span>Tunjangan Jabatan:</span>
+                    <span>Rp {tunjanganJabatan.toLocaleString('id-ID')}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                    <span>Tunjangan Transport:</span>
+                    <span>Rp {tunjanganTransport.toLocaleString('id-ID')}</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-danger)', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px', marginBottom: '8px' }}>POTONGAN (-)</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                    <span>Pajak PPh 21:</span>
+                    <span>Rp {pajakPph21.toLocaleString('id-ID')}</span>
+                  </div>
+                  {potonganKasbon > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                      <span>Potongan Kasbon:</span>
+                      <span>Rp {potonganKasbon.toLocaleString('id-ID')}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px dashed var(--color-border)', marginTop: '20px', paddingTop: '16px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>Take Home Pay (Net):</span>
+                <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-primary)' }}>Rp {netPay.toLocaleString('id-ID')}</span>
+              </div>
+
+              {isLocked && (
+                <div style={{ marginTop: '16px', padding: '10px 12px', backgroundColor: 'var(--color-success-light)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ion-icon name="cloud-done-outline" style={{ color: 'var(--color-success-text)', fontSize: '18px' }}></ion-icon>
+                  <span style={{ fontSize: '11px', color: 'var(--color-success-text)', fontWeight: 600 }}>Tersimpan aman di Cloud Database & dikirim ke portal ESS Karyawan.</span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                {isLocked && (
+                  <button 
+                    className="btn-primary" 
+                    style={{ 
+                      width: 'auto', 
+                      padding: '8px 16px', 
+                      backgroundColor: '#2563EB', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      fontSize: '12px'
+                    }} 
+                    onClick={() => {
+                      alert(`Mengunduh slip gaji digital resmi format PDF untuk ${empForPayslip.name} (Periode Juli 2026)...`);
+                    }}
+                  >
+                    <ion-icon name="download-outline"></ion-icon>
+                    <span>Download PDF</span>
+                  </button>
+                )}
+                <button className="pending-btn reject" style={{ width: 'auto', padding: '8px 16px', margin: 0, borderRadius: '8px' }} onClick={() => setActiveModal(null)}>Tutup</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Add Employee Modal */}
+      {activeModal === 'add_emp' && (
+        <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1000, justifyContent: 'center', alignItems: 'center', padding: '20px 0' }}>
+          <div className="glass-card" style={{ width: '800px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'white', borderRadius: 'var(--radius-lg)', maxHeight: '95vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 className="chart-title" style={{ margin: 0 }}>Form Karyawan Baru</h3>
+              <ion-icon name="close-outline" onClick={() => setActiveModal(null)} style={{ fontSize: '24px', cursor: 'pointer', color: 'var(--color-gray-400)' }}></ion-icon>
+            </div>
+
+            <div style={{ fontSize: '11px', color: 'var(--color-primary)', backgroundColor: 'var(--color-primary-light)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(15, 118, 110, 0.15)', lineHeight: '1.4', marginBottom: '8px' }}>
+              <strong>Pendaftaran Awal (Quick Add):</strong> Setelah data disimpan, karyawan akan menerima email aktivasi untuk melengkapi berkas pribadi secara mandiri di portal ESS.
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="form-group">
+                  <label className="form-label">Nama Lengkap</label>
+                  <input type="text" className="form-input" value={addEmpName} onChange={(e) => setAddEmpName(e.target.value)} placeholder="Budi Santoso" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Email Kerja</label>
+                  <input type="email" className="form-input" value={addEmpEmail} onChange={(e) => setAddEmpEmail(e.target.value)} placeholder="budi.s@karyamaterial.com" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Divisi</label>
+                  <select 
+                    className="form-input" 
+                    value={addEmpDiv} 
+                    onChange={(e) => {
+                      const newDiv = e.target.value;
+                      setAddEmpDiv(newDiv);
+                      const matchingRoles = store.rolesList ? store.rolesList.filter(r => r.department === newDiv) : [];
+                      if (matchingRoles.length > 0) {
+                        setAddEmpRole(matchingRoles[0].name);
+                      } else {
+                        setAddEmpRole('');
+                      }
+                    }} 
+                    style={{ height: '40px' }}
+                  >
+                    {store.departmentsList && store.departmentsList.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Jabatan (Role)</label>
+                  <select className="form-input" value={addEmpRole} onChange={(e) => setAddEmpRole(e.target.value)} style={{ height: '40px' }}>
+                    {store.rolesList && store.rolesList.filter(r => r.department === addEmpDiv).map(role => (
+                      <option key={role.name} value={role.name}>{role.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="form-group">
+                  <label className="form-label">Tipe Kontrak</label>
+                  <select className="form-input" value={addEmpContract} onChange={(e) => setAddEmpContract(e.target.value)} style={{ height: '40px' }}>
+                    <option value="PKWT">PKWT (Kontrak Kerja Waktu Tertentu)</option>
+                    <option value="PKWTT">PKWTT (Karyawan Tetap)</option>
+                    <option value="Harian">Harian Lepas</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tanggal Mulai Kerja</label>
+                  <input type="date" className="form-input" value={addEmpStartDate} onChange={(e) => setAddEmpStartDate(e.target.value)} />
+                </div>
+                {addEmpContract === 'PKWT' && (
+                  <div className="form-group">
+                    <label className="form-label">Tanggal Berakhir Kontrak</label>
+                    <input type="date" className="form-input" value={addEmpEndDate} onChange={(e) => setAddEmpEndDate(e.target.value)} />
+                  </div>
+                )}
+                <div className="form-group">
+                  <label className="form-label">Gaji Pokok Awal (Gross Rupiah)</label>
+                  <input type="number" className="form-input" value={addEmpSalary} onChange={(e) => setAddEmpSalary(e.target.value)} placeholder="6000000" />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px', justifyContent: 'flex-end' }}>
+              <button className="pending-btn reject" onClick={() => setActiveModal(null)} style={{ width: '100px', height: '38px', margin: 0 }}>Batal</button>
+              <button className="pending-btn approve" style={{ width: '160px', height: '38px', margin: 0, backgroundColor: 'var(--color-primary)', color: 'white' }} onClick={() => {
+                if (!addEmpName.trim() || !addEmpEmail.trim()) { alert('Nama dan Email wajib diisi!'); return; }
+                store.addEmployeeDirect(addEmpName, addEmpEmail, addEmpRole, addEmpDiv, addEmpContract, addEmpStartDate, addEmpEndDate, parseFloat(addEmpSalary) || 0);
+                setActiveModal(null);
+                showToast(`Karyawan ${addEmpName} berhasil ditambahkan.`);
+              }}>
+                Simpan & Aktifkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Employee (Magic Link) Modal */}
+      {activeModal === 'invite_emp' && (
+        <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1000, justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '520px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'white', borderRadius: 'var(--radius-lg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 className="chart-title" style={{ margin: 0 }}>Kirim Link Pendaftaran Mandiri</h3>
+              <ion-icon name="close-outline" onClick={() => setActiveModal(null)} style={{ fontSize: '24px', cursor: 'pointer', color: 'var(--color-gray-400)' }}></ion-icon>
+            </div>
+
+            <div style={{ fontSize: '11px', color: 'var(--color-primary)', backgroundColor: 'var(--color-primary-light)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(15, 118, 110, 0.15)', lineHeight: '1.4' }}>
+              <strong>Undangan Rekrutmen Mandiri:</strong> Tentukan rencana penempatan rekrutan. Tautan pendaftaran unik akan digenerate secara otomatis untuk dikirim ke email kandidat.
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Divisi Penempatan & Tanggal Mulai</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+                <select 
+                  className="form-input" 
+                  value={inviteDiv} 
+                  onChange={(e) => {
+                    const newDiv = e.target.value;
+                    setInviteDiv(newDiv);
+                    const matchingRoles = store.rolesList ? store.rolesList.filter(r => r.department === newDiv) : [];
+                    if (matchingRoles.length > 0) {
+                      setInviteRole(matchingRoles[0].name);
+                    } else {
+                      setInviteRole('');
+                    }
+                  }} 
+                  style={{ height: '40px' }}
+                >
+                  {store.departmentsList && store.departmentsList.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+                <input type="date" className="form-input" value={inviteStartDate} onChange={(e) => setInviteStartDate(e.target.value)} style={{ height: '40px' }} />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Rencana Jabatan / Tipe Kontrak</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+                <select className="form-input" value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} style={{ height: '40px' }}>
+                  {store.rolesList && store.rolesList.filter(r => r.department === inviteDiv).map(role => (
+                    <option key={role.name} value={role.name}>{role.name}</option>
+                  ))}
+                </select>
+                <select className="form-input" value={inviteContract} onChange={(e) => setInviteContract(e.target.value)} style={{ height: '40px' }}>
+                  <option value="PKWT">PKWT (Kontrak)</option>
+                  <option value="PKWTT">PKWTT (Tetap)</option>
+                  <option value="Harian">Harian Lepas</option>
+                </select>
+              </div>
+            </div>
+
+            {magicLink && (
+              <div className="form-group" style={{ backgroundColor: 'var(--color-bg)', padding: '12px', borderRadius: '8px', border: '1px dashed var(--color-primary)' }}>
+                <label className="form-label" style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>Tautan Pendaftaran Unik (Salin Link):</label>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                  <input type="text" className="form-input" value={magicLink} readOnly style={{ flex: 1, fontSize: '11px', height: '36px', backgroundColor: 'white' }} />
+                  <button 
+                    className="btn-primary" 
+                    style={{ height: '36px', padding: '0 12px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    onClick={() => {
+                      navigator.clipboard.writeText(magicLink);
+                      showToast('Tautan berhasil disalin ke clipboard!');
+                    }}
+                  >
+                    <ion-icon name="copy-outline"></ion-icon>
+                    <span>Salin</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px', justifyContent: 'flex-end' }}>
+              <button className="pending-btn reject" onClick={() => setActiveModal(null)} style={{ width: '100px', height: '38px', margin: 0 }}>Batal</button>
+              <button className="btn-primary" style={{ height: '38px', width: 'auto', padding: '0 20px' }} onClick={() => {
+                const link = `http://localhost:5173/register?role=${encodeURIComponent(inviteRole)}&div=${encodeURIComponent(inviteDiv)}&contract=${inviteContract}&start=${inviteStartDate}&code=${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+                setMagicLink(link);
+                showToast('Link Pendaftaran Mandiri berhasil digenerate.');
+              }}>
+                Generate Link Undangan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Salary & Compensation Modal */}
+      {activeModal === 'edit_salary' && (
+        <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1000, justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '700px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'white', borderRadius: '16px', maxHeight: '90vh' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: '4px' }}>
+              <h3 className="chart-title" style={{ margin: 0 }}>Ubah Data Gaji & Kompensasi</h3>
+              <ion-icon name="close-outline" onClick={() => setActiveModal(null)} style={{ fontSize: '24px', cursor: 'pointer', color: 'var(--color-gray-400)' }}></ion-icon>
+            </div>
+
+            {/* Scrollable Form Body Container */}
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '6px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ backgroundColor: 'var(--color-gray-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px' }}>
+                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{emp.name}</p>
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>Jabatan: {emp.role} • Divisi: {emp.division}</p>
+              </div>
+
+              {/* Part 1: Gaji & Tunjangan Inputs */}
+              <div>
+                <h5 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '12px', borderBottom: '1px solid var(--color-border)', paddingBottom: '4px' }}>1. Struktur Gaji Pokok & Tunjangan Tetap</h5>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '11px' }}>Gaji Pokok Bulanan (Gross Rupiah)</label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      value={editSalaryValue} 
+                      onChange={(e) => setEditSalaryValue(e.target.value)} 
+                      placeholder="Contoh: 6500000" 
+                      style={{ height: '36px', fontSize: '12px' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '11px' }}>Tunjangan Jabatan (Rupiah)</label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      value={editSalaryJabatan} 
+                      onChange={(e) => setEditSalaryJabatan(e.target.value)} 
+                      placeholder="Contoh: 500000" 
+                      style={{ height: '36px', fontSize: '12px' }}
+                    />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label" style={{ fontSize: '11px' }}>Tunjangan Transport / Operasional (Rupiah)</label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      value={editSalaryTransport} 
+                      onChange={(e) => setEditSalaryTransport(e.target.value)} 
+                      placeholder="Contoh: 300000" 
+                      style={{ height: '36px', fontSize: '12px' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Part 2: Audit Logs info / effective date */}
+              <div>
+                <h5 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '12px', borderBottom: '1px solid var(--color-border)', paddingBottom: '4px' }}>2. Pengesahan Perubahan & Tanggal Efektif</h5>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '11px' }}>Tanggal Efektif Berlaku</label>
+                    <input 
+                      type="date" 
+                      className="form-input" 
+                      value={editSalaryEffectiveDate} 
+                      onChange={(e) => setEditSalaryEffectiveDate(e.target.value)} 
+                      style={{ height: '36px', fontSize: '12px' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '11px' }}>Alasan Penyesuaian Gaji</label>
+                    <select 
+                      className="form-input" 
+                      value={editSalaryReason} 
+                      onChange={(e) => setEditSalaryReason(e.target.value)} 
+                      style={{ height: '36px', fontSize: '12px' }}
+                    >
+                      <option value="Set Gaji Awal">Set Gaji Awal (Karyawan Baru)</option>
+                      <option value="Promosi Jabatan">Promosi Jabatan</option>
+                      <option value="Penyesuaian Tahunan">Kenaikan / Penyesuaian Tahunan</option>
+                      <option value="Koreksi Data Gaji">Koreksi Data / Input Salah</option>
+                      <option value="Penurunan Jabatan">Penurunan Jabatan / Demosi</option>
+                    </select>
+                  </div>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label" style={{ fontSize: '11px' }}>Catatan / Keterangan Tambahan</label>
+                    <textarea 
+                      className="form-input" 
+                      value={editSalaryNotes} 
+                      onChange={(e) => setEditSalaryNotes(e.target.value)} 
+                      placeholder="Tulis alasan penyesuaian evaluasi..." 
+                      style={{ height: '60px', fontSize: '12px', resize: 'none', padding: '8px 12px' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Part 3: Change History Logs */}
+              <div>
+                <h5 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '8px', borderBottom: '1px solid var(--color-border)', paddingBottom: '4px' }}>3. Histori Perubahan Gaji & Log Audit</h5>
+                {emp.salaryHistory && emp.salaryHistory.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--color-border)', padding: '12px', borderRadius: '8px', backgroundColor: '#F8FAFC' }}>
+                    {emp.salaryHistory.map((log, idx) => (
+                      <div key={idx} style={{ fontSize: '11px', lineHeight: '1.4', borderBottom: idx < emp.salaryHistory.length - 1 ? '1px solid var(--color-border)' : 'none', paddingBottom: '8px', marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: 'var(--text-main)' }}>
+                          <span style={{ color: 'var(--color-primary)' }}>{log.reason} (Efektif: {log.effectiveDate})</span>
+                          <span style={{ color: 'var(--color-gray-400)' }}>{log.date}</span>
+                        </div>
+                        <div style={{ color: 'var(--text-secondary)', marginTop: '2px' }}>
+                          Gaji pokok diubah dari <strong>Rp {log.oldSalary.toLocaleString('id-ID')}</strong> menjadi <strong>Rp {log.newSalary.toLocaleString('id-ID')}</strong> oleh <strong>{log.changedBy}</strong>.
+                        </div>
+                        {log.notes && <div style={{ color: 'var(--color-gray-500)', fontStyle: 'italic', marginTop: '2px' }}>Catatan: "{log.notes}"</div>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '11px', color: 'var(--color-gray-400)', fontStyle: 'italic', margin: 0, padding: '4px 0' }}>Belum ada histori perubahan gaji (audit trail) untuk karyawan ini.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Fixed Footer Buttons Container (Always visible at the bottom) */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--color-border)', paddingTop: '16px', marginTop: '4px' }}>
+              <button className="pending-btn reject" onClick={() => setActiveModal(null)} style={{ width: '100px', height: '38px', margin: 0 }}>Batal</button>
+              <button 
+                className="pending-btn approve" 
+                style={{ width: '140px', height: '38px', margin: 0, backgroundColor: 'var(--color-primary)', color: 'white' }}
+                onClick={() => {
+                  const newSalary = parseFloat(editSalaryValue);
+                  const newJabatan = parseFloat(editSalaryJabatan) || 0;
+                  const newTransport = parseFloat(editSalaryTransport) || 0;
+                  if (isNaN(newSalary) || newSalary <= 0) {
+                    alert('Harap masukkan nominal gaji pokok yang valid!');
+                    return;
+                  }
+                  store.updateEmployeeSalary(emp.id, {
+                    salary: newSalary,
+                    tunjanganJabatan: newJabatan,
+                    tunjanganTransport: newTransport,
+                    potonganKasbon: 0, // Ditetapkan ke 0/Dihapus
+                    effectiveDate: editSalaryEffectiveDate,
+                    reason: editSalaryReason,
+                    notes: editSalaryNotes,
+                    changedBy: currentUserRole
+                  });
+                  setActiveModal(null);
+                  showToast(`Kompensasi ${emp.name} berhasil diperbarui.`);
+                }}
+              >
+                Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
