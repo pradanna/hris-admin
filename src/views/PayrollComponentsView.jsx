@@ -18,7 +18,7 @@ export default function PayrollComponentsView({ store }) {
       <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>Komponen Gaji & Parameter Finansial</h2>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Daftar parameter kalkulasi tunjangan, potongan pajak, serta BPJS kesehatan/ketenagakerjaan yang dikonfigurasi di KaryaHub.</p>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Daftar parameter kalkulasi tunjangan, potongan pajak, serta BPJS kesehatan/ketenagakerjaan yang dikonfigurasi di Panorama HR.</p>
         </div>
         <div style={{ fontSize: '32px', color: 'var(--color-primary)' }}>
           <ion-icon name="calculator-outline"></ion-icon>

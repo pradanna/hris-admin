@@ -553,7 +553,7 @@ export function ModalViews({
             <div className="glass-card" style={{ width: '580px', padding: '32px', backgroundColor: 'white', maxHeight: '90vh', overflowY: 'auto', borderRadius: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px dashed var(--color-border)', paddingBottom: '16px', marginBottom: '16px' }}>
                 <div>
-                  <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-primary)' }}>KaryaHub HRIS</h2>
+                  <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-primary)' }}>Panorama HR</h2>
                   <p style={{ fontSize: '11px', color: isLocked ? 'var(--color-success-text)' : 'var(--text-secondary)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: isLocked ? 700 : 'normal' }}>
                     <ion-icon name={isLocked ? "shield-checkmark-outline" : "document-text-outline"} style={{ fontSize: '14px' }}></ion-icon>
                     <span>{isLocked ? 'Slip Gaji Resmi (Terkunci & Diterbitkan)' : 'Slip Gaji Sementara (Draf Payroll)'}</span>

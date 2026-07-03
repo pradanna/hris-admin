@@ -118,8 +118,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           <ion-icon name="pulse-outline"></ion-icon>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-gray-900)', lineHeight: '1.2' }}>KaryaHub</span>
-          <span style={{ fontSize: '11px', color: 'var(--color-gray-500)', marginTop: '2px' }}>admin@karyahub.com</span>
+          <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-gray-900)', lineHeight: '1.2' }}>Panorama HR</span>
+          <span style={{ fontSize: '11px', color: 'var(--color-gray-500)', marginTop: '2px' }}>admin@panoramahr.com</span>
         </div>
         <ion-icon name="swap-vertical-outline" style={{ fontSize: '16px', color: 'var(--color-gray-400)' }}></ion-icon>
       </div>
