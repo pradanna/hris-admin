@@ -26,6 +26,8 @@ export default function LeavesView({
       matchesTab = r.type === 'Lembur';
     } else if (activeLeaveSubTab === 'tugas') {
       matchesTab = r.type === 'Tugas Keluar' || r.type === 'Dinas Luar';
+    } else if (activeLeaveSubTab === 'swap') {
+      matchesTab = r.type === 'Tukar Shift';
     }
 
     const matchesStatus = r.status === leaveStatusFilter;
@@ -60,6 +62,7 @@ export default function LeavesView({
       else if (key === 'izin') matchesTab = r.type === 'Cuti Sakit' || r.type === 'Izin Resmi' || r.type === 'Izin' || r.type === 'Izin Khusus';
       else if (key === 'lembur') matchesTab = r.type === 'Lembur';
       else if (key === 'tugas') matchesTab = r.type === 'Tugas Keluar' || r.type === 'Dinas Luar';
+      else if (key === 'swap') matchesTab = r.type === 'Tukar Shift';
       
       let matchesDate = true;
       if (r.requestDate) {
@@ -121,6 +124,7 @@ export default function LeavesView({
           { key: 'izin', label: 'Izin', icon: 'document-text-outline' },
           { key: 'lembur', label: 'Lembur', icon: 'time-outline' },
           { key: 'tugas', label: 'Tugas Keluar', icon: 'airplane-outline' },
+          { key: 'swap', label: 'Tukar Shift', icon: 'sync-outline' },
         ].map(tab => (
           <button 
             key={tab.key} 

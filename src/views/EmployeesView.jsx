@@ -296,8 +296,9 @@ export default function EmployeesView({
                                   gap: '8px'
                                 }}
                                 onClick={() => {
+                                  setSelectedEmpId(emp.id);
+                                  setActiveModal('edit_profile');
                                   setActiveDropdownEmpId(null);
-                                  showToast('Fitur Edit Profil (Simulasi)');
                                 }}
                               >
                                 <ion-icon name="create-outline" style={{ color: 'var(--color-warning-text)' }}></ion-icon>

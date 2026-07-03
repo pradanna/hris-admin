@@ -15,6 +15,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       title: 'OPERASIONAL HR',
       items: [
         { id: 'attendance', label: 'Laporan Kehadiran', icon: 'checkmark-done-circle-outline' },
+        { id: 'shift_planner', label: 'Penjadwalan Shift', icon: 'calendar-number-outline' },
         { id: 'leaves', label: 'Manajemen Pengajuan', icon: 'calendar-outline' },
         { id: 'broadcast', label: 'Broadcast Pesan', icon: 'megaphone-outline' }
       ]
@@ -24,13 +25,15 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       items: [
         { id: 'payroll_run', label: 'Proses Payroll', icon: 'wallet-outline' },
         { id: 'payroll_history', label: 'Riwayat Gaji & Slip', icon: 'receipt-outline' },
-        { id: 'payroll_components', label: 'Komponen Gaji', icon: 'calculator-outline' }
+        // { id: 'payroll_components', label: 'Komponen Gaji', icon: 'calculator-outline' },
+        { id: 'payroll_setting', label: 'Pengaturan Payroll', icon: 'options-outline' }
       ]
     },
     {
       title: 'PENGATURAN SISTEM',
       items: [
-        { id: 'settings', label: 'Pengaturan Kantor', icon: 'settings-outline' }
+        { id: 'settings', label: 'Pengaturan Kantor', icon: 'settings-outline' },
+        { id: 'shift_master', label: 'Jam Kerja & Shift', icon: 'time-outline' }
       ]
     }
   ];

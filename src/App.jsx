@@ -10,7 +10,11 @@ import SettingsView from './views/SettingsView';
 import BroadcastView from './views/BroadcastView';
 import MasterDataView from './views/MasterDataView';
 import PayrollComponentsView from './views/PayrollComponentsView';
+import PayrollSettingView from './views/PayrollSettingView';
+import ShiftPlannerView from './views/ShiftPlannerView';
+import ShiftMasterView from './views/ShiftMasterView';
 import { ModalViews } from './views/ModalViews';
+import RegisterView from './views/RegisterView';
 
 export default function App() {
   const store = useStore();
@@ -144,6 +148,25 @@ export default function App() {
       showToast(`Persetujuan ${request.type} untuk ${request.name} berhasil disetujui.`);
     }
   };
+
+  const isRegisterPage = window.location.pathname.startsWith('/register');
+
+  if (isRegisterPage) {
+    return (
+      <div className="app-container" style={{ display: 'block', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+        <RegisterView store={store} showToast={showToast} />
+        {/* Toast Notifications */}
+        <div id="toast-container" style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 10000, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {toasts.map(t => (
+            <div key={t.id} className={`toast-notification ${t.type === 'error' ? 'error' : ''}`}>
+              <ion-icon name={t.type === 'error' ? 'close-circle-outline' : 'checkmark-circle-outline'} style={{ fontSize: '18px' }}></ion-icon>
+              <span>{t.message}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
@@ -341,6 +364,11 @@ export default function App() {
               store={store}
             />
           )}
+          {activeTab === 'payroll_setting' && (
+            <PayrollSettingView
+              showToast={showToast}
+            />
+          )}
           {activeTab === 'master_data' && (
             <MasterDataView
               store={store}
@@ -349,6 +377,18 @@ export default function App() {
           )}
           {activeTab === 'settings' && (
             <SettingsView
+              store={store}
+              showToast={showToast}
+            />
+          )}
+          {activeTab === 'shift_planner' && (
+            <ShiftPlannerView
+              store={store}
+              showToast={showToast}
+            />
+          )}
+          {activeTab === 'shift_master' && (
+            <ShiftMasterView
               store={store}
               showToast={showToast}
             />
@@ -422,6 +462,16 @@ export default function App() {
         currentUserRole={currentUserRole}
         handleDirectApprove={handleDirectApprove}
         showToast={showToast}
+        inviteRole={inviteRole}
+        setInviteRole={setInviteRole}
+        inviteDiv={inviteDiv}
+        setInviteDiv={setInviteDiv}
+        inviteContract={inviteContract}
+        setInviteContract={setInviteContract}
+        inviteStartDate={inviteStartDate}
+        setInviteStartDate={setInviteStartDate}
+        magicLink={magicLink}
+        setMagicLink={setMagicLink}
       />
 
       {/* Toast Notifications */}

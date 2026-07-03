@@ -197,13 +197,85 @@ export function useStore() {
       return emp;
     });
   });
+  // --- SHIFT SCHEDULER STATES & INITIALIZATION ---
+  const [shiftMaster, setShiftMaster] = useState(() => {
+    const val = localStorage.getItem('hris_shift_master');
+    if (val) return JSON.parse(val);
+    return [
+      { code: 'P', name: 'Shift Pagi', start: '08:00', end: '16:00', color: '#0ea5e9', bg: '#e0f2fe' },
+      { code: 'S', name: 'Shift Siang', start: '14:00', end: '22:00', color: '#8b5cf6', bg: '#f3e8ff' },
+      { code: 'M', name: 'Shift Malam', start: '22:00', end: '06:00', color: '#be185d', bg: '#fce7f3' },
+      { code: 'L', name: 'Libur', start: '-', end: '-', color: '#64748b', bg: '#f1f5f9' },
+    ];
+  });
+
+  const [shifts, setShifts] = useState(() => {
+    const val = localStorage.getItem('hris_shifts');
+    if (val) return JSON.parse(val);
+    // Initialize default shifts for employees
+    const defaultShifts = {};
+    employees.forEach(emp => {
+      defaultShifts[emp.id] = {};
+      // Generate some default patterns for July 2026 (days 1 to 31)
+      for (let day = 1; day <= 31; day++) {
+        // Let's create a rotating pattern: P, P, S, S, M, M, L
+        const pattern = ['P', 'P', 'S', 'S', 'M', 'M', 'L'];
+        const pIndex = (day + parseInt(emp.id.replace(/\D/g, '') || '0')) % pattern.length;
+        defaultShifts[emp.id][day] = pattern[pIndex];
+      }
+    });
+    return defaultShifts;
+  });
 
   const [pendingRequests, setPendingRequests] = useState(() => {
     const val = localStorage.getItem('hris_pending_requests');
     let parsed = val ? JSON.parse(val) : null;
-    // Check if the loaded data is missing 'REQ007' (new Cuti Tahunan example request)
-    if (!parsed || parsed.length === 0 || !parsed.some(p => p.id === 'REQ008')) {
-      parsed = initialPendingRequests;
+    if (!parsed || parsed.length === 0) {
+      parsed = [
+        ...initialPendingRequests,
+        {
+          id: 'REQ_SWAP_001',
+          name: 'Anisa Putri',
+          role: 'Supervisor Kasir',
+          time: '1 jam lalu',
+          type: 'Tukar Shift',
+          tagClass: 'overtime',
+          avatar: '',
+          reason: 'Pengajuan tukar shift tanggal 15 Juli 2026 (Malam) dengan Rizky Kurniawan (Siang). Alasan: Menghadiri wisuda adik kandung.',
+          details: {
+            fromEmpId: 'EMP002', // Anisa Putri
+            toEmpId: 'EMP003', // Rizky Kurniawan
+            day: 15,
+            fromShift: 'M',
+            toShift: 'S'
+          },
+          status: 'Pending',
+          requestDate: '2026-07-03'
+        }
+      ];
+    } else {
+      // Ensure the mock swap request is always there if missing
+      if (!parsed.some(p => p.id === 'REQ_SWAP_001')) {
+        parsed.push({
+          id: 'REQ_SWAP_001',
+          name: 'Anisa Putri',
+          role: 'Supervisor Kasir',
+          time: '1 jam lalu',
+          type: 'Tukar Shift',
+          tagClass: 'overtime',
+          avatar: '',
+          reason: 'Pengajuan tukar shift tanggal 15 Juli 2026 (Malam) dengan Rizky Kurniawan (Siang). Alasan: Menghadiri wisuda adik kandung.',
+          details: {
+            fromEmpId: 'EMP002', // Anisa Putri
+            toEmpId: 'EMP003', // Rizky Kurniawan
+            day: 15,
+            fromShift: 'M',
+            toShift: 'S'
+          },
+          status: 'Pending',
+          requestDate: '2026-07-03'
+        });
+      }
     }
     return parsed.map(p => ({ status: p.status || 'Pending', ...p }));
   });
@@ -297,6 +369,38 @@ export function useStore() {
     localStorage.setItem('hris_broadcasts', JSON.stringify(broadcasts));
   }, [broadcasts]);
 
+  useEffect(() => {
+    localStorage.setItem('hris_shifts', JSON.stringify(shifts));
+  }, [shifts]);
+
+  useEffect(() => {
+    localStorage.setItem('hris_shift_master', JSON.stringify(shiftMaster));
+  }, [shiftMaster]);
+
+  const updateEmployeeShift = (empId, day, shiftCode) => {
+    setShifts(prev => {
+      const copy = { ...prev };
+      if (!copy[empId]) copy[empId] = {};
+      copy[empId][day] = shiftCode;
+      return copy;
+    });
+  };
+
+  const updateShiftMaster = (newMasterList) => {
+    setShiftMaster(newMasterList);
+    setActivities(prev => [
+      {
+        id: `ACT-${Date.now()}`,
+        employee: 'Budi Santoso (Anda)',
+        avatar: 'BS',
+        action: `Update master jam kerja shift`,
+        time: 'Baru saja',
+        status: 'Berhasil'
+      },
+      ...prev
+    ]);
+  };
+
   const addEmployee = (emp) => {
     const newEmp = {
       id: `EMP00${employees.length + 1}`,
@@ -339,6 +443,18 @@ export function useStore() {
         photoFront: '',
         photoRight: '',
         photoLeft: ''
+      });
+    } else if (request.type === 'Tukar Shift') {
+      // Perform the shift swap in shifts state
+      const { fromEmpId, toEmpId, day, fromShift, toShift } = request.details;
+      setShifts(prev => {
+        const copy = { ...prev };
+        if (!copy[fromEmpId]) copy[fromEmpId] = {};
+        if (!copy[toEmpId]) copy[toEmpId] = {};
+        
+        copy[fromEmpId][day] = toShift;
+        copy[toEmpId][day] = fromShift;
+        return copy;
       });
     }
 
@@ -568,9 +684,25 @@ export function useStore() {
       ...prev
     ]);
   };
+  const updateEmployeeProfile = (id, profileData) => {
+    setEmployees(prev => prev.map(emp => {
+      if (emp.id !== id) return emp;
+      return { ...emp, ...profileData };
+    }));
+    setActivities(prev => [
+      {
+        id: `ACT-${Date.now()}`,
+        employee: 'Budi Santoso (Anda)',
+        avatar: 'BS',
+        action: `Update Profil Lengkap Karyawan ${id} (BPJS, Pajak, Kontak Darurat)`,
+        time: 'Baru saja',
+        status: 'Berhasil'
+      },
+      ...prev
+    ]);
+  };
 
 
-  // Live state polling from localStorage (very useful to capture new register submits instantly)
   useEffect(() => {
     const handleStorage = () => {
       const val = localStorage.getItem('hris_pending_requests');
@@ -719,6 +851,18 @@ export function useStore() {
     submitPayrollApproval,
     disbursePayroll,
     updateSettings,
-    updateEmployeeSalary
+    updateEmployeeSalary,
+    updateEmployeeProfile,
+    shiftMaster,
+    shifts,
+    updateEmployeeShift,
+    updateShiftMaster,
+    addPendingRequest: (req) => {
+      setPendingRequests(prev => {
+        const next = [req, ...prev];
+        localStorage.setItem('hris_pending_requests', JSON.stringify(next));
+        return next;
+      });
+    }
   };
 }

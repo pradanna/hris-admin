@@ -1,4 +1,246 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { calculatePph21, getPtkpCategory, PTKP_OPTIONS } from '../utils/taxTer';
+
+// Sub-component untuk panel data pajak karyawan (butuh useState, tidak boleh dalam IIFE)
+function TaxPanel({ emp, store }) {
+  const [localPtkp, setLocalPtkp] = useState(emp.ptkpStatus || 'TK/0');
+  const [localNpwp, setLocalNpwp] = useState(emp.npwpNumber || '');
+  const curCategory = getPtkpCategory(localPtkp);
+  const catCol = { A: '#0369a1', B: '#7c3aed', C: '#be185d' }[curCategory] || '#0369a1';
+
+  return (
+    <div style={{ border: '1px solid #fbcfe8', borderRadius: '10px', overflow: 'hidden' }}>
+      <div style={{ padding: '10px 16px', backgroundColor: '#fce7f3', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <ion-icon name="receipt-outline" style={{ fontSize: '16px', color: '#be185d' }}></ion-icon>
+        <h5 style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#be185d' }}>2.5. Data Pajak &amp; PTKP (PPh 21)</h5>
+      </div>
+      <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="form-group">
+          <label className="form-label" style={{ fontSize: '11px' }}>Status PTKP</label>
+          <select
+            className="form-input"
+            value={localPtkp}
+            onChange={e => setLocalPtkp(e.target.value)}
+            style={{ height: '36px', fontSize: '12px' }}
+          >
+            {PTKP_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <p style={{ margin: '3px 0 0', fontSize: '10px', color: 'var(--text-secondary)' }}>
+            Kategori TER: <strong style={{ color: catCol }}>Kategori {curCategory}</strong>
+          </p>
+        </div>
+        <div className="form-group">
+          <label className="form-label" style={{ fontSize: '11px' }}>Nomor NPWP</label>
+          <input
+            type="text"
+            className="form-input"
+            value={localNpwp}
+            onChange={e => setLocalNpwp(e.target.value)}
+            placeholder="XX.XXX.XXX.X-XXX.XXX"
+            style={{ height: '36px', fontSize: '12px' }}
+          />
+          <p style={{ margin: '3px 0 0', fontSize: '10px', color: localNpwp.trim() ? '#059669' : '#dc2626' }}>
+            {localNpwp.trim() ? '✓ NPWP Valid — tarif normal' : '⚠ Tanpa NPWP — tarif +20%'}
+          </p>
+        </div>
+      </div>
+      <div style={{ padding: '0 16px 12px', display: 'flex', justifyContent: 'flex-end' }}>
+        <button
+          style={{ height: '30px', padding: '0 14px', background: '#be185d', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          onClick={() => store.updateEmployeeProfile(emp.id, { ptkpStatus: localPtkp, npwpNumber: localNpwp })}
+        >
+          Simpan Data Pajak
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Sub-component untuk mengedit Profil Lengkap, Finansial, BPJS, & Kontak Darurat secara mandiri
+function ProfileEditPanel({ emp, store, showToast }) {
+  // Biodata Pribadi
+  const [name, setName] = useState(emp.name || '');
+  const [email, setEmail] = useState(emp.email || '');
+  const [nikKtp, setNikKtp] = useState(emp.nikKtp || '');
+  const [placeOfBirth, setPlaceOfBirth] = useState(emp.placeOfBirth || '');
+  const [dateOfBirth, setDateOfBirth] = useState(emp.dateOfBirth || '');
+  const [gender, setGender] = useState(emp.gender || 'Laki-laki');
+  const [religion, setReligion] = useState(emp.religion || 'Islam');
+  const [domicileAddress, setDomicileAddress] = useState(emp.domicileAddress || '');
+
+  // Finansial, BPJS, & Kontak Darurat
+  const [bankName, setBankName] = useState(emp.bankName || 'BCA');
+  const [bankAccountNumber, setBankAccountNumber] = useState(emp.bankAccountNumber || '');
+  const [bankAccountHolder, setBankAccountHolder] = useState(emp.bankAccountHolder || '');
+  const [bpjsKesehatanNumber, setBpjsKesehatanNumber] = useState(emp.bpjsKesehatanNumber || '');
+  const [bpjsNakerNumber, setBpjsNakerNumber] = useState(emp.bpjsNakerNumber || '');
+  const [emergencyName, setEmergencyName] = useState(emp.emergencyName || '');
+  const [emergencyRelation, setEmergencyRelation] = useState(emp.emergencyRelation || emp.emergencyRelationship || 'Orang Tua');
+  const [emergencyPhone, setEmergencyPhone] = useState(emp.emergencyPhone || '');
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      alert('Nama Karyawan tidak boleh kosong!');
+      return;
+    }
+    store.updateEmployeeProfile(emp.id, {
+      name,
+      email,
+      nikKtp,
+      placeOfBirth,
+      dateOfBirth,
+      gender,
+      religion,
+      domicileAddress,
+      bankName,
+      bankAccountNumber,
+      bankAccountHolder,
+      bpjsKesehatanNumber,
+      bpjsNakerNumber,
+      emergencyName,
+      emergencyRelation,
+      emergencyPhone
+    });
+    showToast('Profil Karyawan (Biodata, BPJS & Kontak Darurat) berhasil diperbarui.');
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      
+      {/* Bagian 1: Biodata Karyawan */}
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
+        <div style={{ padding: '10px 16px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ion-icon name="person-outline" style={{ fontSize: '16px', color: 'var(--color-primary)' }}></ion-icon>
+          <h5 style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>2.5. Biodata Pribadi</h5>
+        </div>
+        <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>Nama Lengkap</label>
+            <input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="Budi Santoso" />
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>Email Pribadi / Kerja</label>
+            <input type="email" className="form-input" value={email} onChange={e => setEmail(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="budi@example.com" />
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>NIK KTP (16 digit)</label>
+            <input type="text" className="form-input" value={nikKtp} onChange={e => setNikKtp(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="3201XXXXXXXXXXXX" maxLength={16} />
+          </div>
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div>
+              <label className="form-label" style={{ fontSize: '11px' }}>Tempat Lahir</label>
+              <input type="text" className="form-input" value={placeOfBirth} onChange={e => setPlaceOfBirth(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="Jakarta" />
+            </div>
+            <div>
+              <label className="form-label" style={{ fontSize: '11px' }}>Tanggal Lahir</label>
+              <input type="date" className="form-input" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} style={{ height: '36px', fontSize: '12px' }} />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>Jenis Kelamin</label>
+            <select className="form-input" value={gender} onChange={e => setGender(e.target.value)} style={{ height: '36px', fontSize: '12px' }}>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>Agama</label>
+            <select className="form-input" value={religion} onChange={e => setReligion(e.target.value)} style={{ height: '36px', fontSize: '12px' }}>
+              <option value="Islam">Islam</option>
+              <option value="Kristen Protestan">Kristen Protestan</option>
+              <option value="Katolik">Katolik</option>
+              <option value="Hindu">Hindu</option>
+              <option value="Buddha">Buddha</option>
+              <option value="Khonghucu">Khonghucu</option>
+            </select>
+          </div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+            <label className="form-label" style={{ fontSize: '11px' }}>Alamat Domisili Sesuai KTP</label>
+            <input type="text" className="form-input" value={domicileAddress} onChange={e => setDomicileAddress(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="Jl. Kemang Raya No. 4" />
+          </div>
+        </div>
+      </div>
+
+      {/* Bagian 2: Rekening & BPJS */}
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
+        <div style={{ padding: '10px 16px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ion-icon name="card-outline" style={{ fontSize: '16px', color: 'var(--color-primary)' }}></ion-icon>
+          <h5 style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>2.6. BPJS &amp; Rekening Bank</h5>
+        </div>
+        <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px' }}>
+            <div>
+              <label className="form-label" style={{ fontSize: '11px' }}>Bank</label>
+              <select className="form-input" value={bankName} onChange={e => setBankName(e.target.value)} style={{ height: '36px', fontSize: '12px' }}>
+                <option value="BCA">BCA</option>
+                <option value="Mandiri">Mandiri</option>
+                <option value="BNI">BNI</option>
+                <option value="BRI">BRI</option>
+                <option value="BSI">BSI</option>
+              </select>
+            </div>
+            <div>
+              <label className="form-label" style={{ fontSize: '11px' }}>No. Rekening</label>
+              <input type="text" className="form-input" value={bankAccountNumber} onChange={e => setBankAccountNumber(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="1234567890" />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>Pemilik Rekening</label>
+            <input type="text" className="form-input" value={bankAccountHolder} onChange={e => setBankAccountHolder(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="Nama Sesuai Buku Tabungan" />
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>No. BPJS Kesehatan</label>
+            <input type="text" className="form-input" value={bpjsKesehatanNumber} onChange={e => setBpjsKesehatanNumber(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="000XXXXXXXXXX" />
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>No. BPJS Ketenagakerjaan</label>
+            <input type="text" className="form-input" value={bpjsNakerNumber} onChange={e => setBpjsNakerNumber(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="190XXXXXXXXXX" />
+          </div>
+        </div>
+      </div>
+
+      {/* Bagian 3: Kontak Darurat */}
+      <div style={{ border: '1px solid #fee2e2', borderRadius: '10px', overflow: 'hidden' }}>
+        <div style={{ padding: '10px 16px', backgroundColor: '#fef2f2', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ion-icon name="call-outline" style={{ fontSize: '16px', color: '#ef4444' }}></ion-icon>
+          <h5 style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#ef4444' }}>2.7. Kontak Darurat</h5>
+        </div>
+        <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>Nama Kontak Darurat</label>
+            <input type="text" className="form-input" value={emergencyName} onChange={e => setEmergencyName(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="Nama Kerabat" />
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>Hubungan</label>
+            <select className="form-input" value={emergencyRelation} onChange={e => setEmergencyRelation(e.target.value)} style={{ height: '36px', fontSize: '12px' }}>
+              <option value="Orang Tua">Orang Tua</option>
+              <option value="Suami / Istri">Suami / Istri</option>
+              <option value="Saudara Kandung">Saudara Kandung</option>
+              <option value="Anak">Anak</option>
+              <option value="Kerabat Lain">Kerabat Lain</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '11px' }}>No. Telepon Darurat</label>
+            <input type="text" className="form-input" value={emergencyPhone} onChange={e => setEmergencyPhone(e.target.value)} style={{ height: '36px', fontSize: '12px' }} placeholder="08XXXXXXXXXX" />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-4px', marginBottom: '8px' }}>
+        <button
+          style={{ height: '32px', padding: '0 16px', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '4px' }}
+          onClick={handleSave}
+        >
+          <ion-icon name="save-outline"></ion-icon>
+          <span>Simpan Data Profil &amp; BPJS</span>
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function ModalViews({
   store,
@@ -64,7 +306,17 @@ export function ModalViews({
   setSelectedEmpId,
   currentUserRole,
   handleDirectApprove,
-  showToast
+  showToast,
+  inviteRole,
+  setInviteRole,
+  inviteDiv,
+  setInviteDiv,
+  inviteContract,
+  setInviteContract,
+  inviteStartDate,
+  setInviteStartDate,
+  magicLink,
+  setMagicLink
 }) {
   if (!activeModal) return null;
 
@@ -103,13 +355,6 @@ export function ModalViews({
               </div>
             )}
 
-            {renewDecision !== 'terminate' && (
-              <div className="form-group">
-                <label className="form-label">Penyesuaian Gaji Pokok Baru (Gross IDR)</label>
-                <input type="number" className="form-input" value={renewSalary} onChange={(e) => setRenewSalary(parseInt(e.target.value) || 0)} />
-              </div>
-            )}
-
             <div className="form-group">
               <label className="form-label">Catatan / Evaluasi Kinerja (Opsional)</label>
               <textarea className="form-input" value={renewNotes} onChange={(e) => setRenewNotes(e.target.value)} placeholder="Tulis evaluasi singkat..." style={{ height: '70px', resize: 'none' }}></textarea>
@@ -118,7 +363,7 @@ export function ModalViews({
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button className="pending-btn reject" onClick={() => setActiveModal(null)}>Batal</button>
               <button className="pending-btn approve" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }} onClick={() => {
-                store.renewContract(selectedEmpName, renewDecision, renewEffectiveDate, renewEndDate, renewNotes, renewSalary);
+                store.renewContract(selectedEmpName, renewDecision, renewEffectiveDate, renewEndDate, renewNotes);
                 setActiveModal(null);
                 showToast(`Keputusan kontrak untuk ${selectedEmpName} berhasil disimpan.`);
               }}>
@@ -384,6 +629,35 @@ export function ModalViews({
                     );
                   }
 
+                  if (req.type === 'Tukar Shift' && req.details) {
+                    const fromEmp = store.employees.find(e => e.id === req.details.fromEmpId) || {};
+                    const toEmp = store.employees.find(e => e.id === req.details.toEmpId) || {};
+                    const fromShiftConf = store.shiftMaster?.find(s => s.code === req.details.fromShift) || {};
+                    const toShiftConf = store.shiftMaster?.find(s => s.code === req.details.toShift) || {};
+                    return (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', backgroundColor: '#faf5ff', padding: '14px', borderRadius: '10px', border: '1px solid #e9d5ff' }}>
+                        <div>
+                          <label style={{ fontSize: '10px', color: '#7c3aed', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dari Pengaju</label>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>
+                            {fromEmp.name} (Tgl {req.details.day} Juli)
+                          </div>
+                          <span style={{ fontSize: '11px', display: 'inline-block', marginTop: '4px', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', backgroundColor: fromShiftConf.bg || '#f1f5f9', color: fromShiftConf.color || '#64748b' }}>
+                            Shift {req.details.fromShift} ({fromShiftConf.start} - {fromShiftConf.end})
+                          </span>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '10px', color: '#7c3aed', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ditukar Dengan</label>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>
+                            {toEmp.name} (Tgl {req.details.day} Juli)
+                          </div>
+                          <span style={{ fontSize: '11px', display: 'inline-block', marginTop: '4px', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', backgroundColor: toShiftConf.bg || '#f1f5f9', color: toShiftConf.color || '#64748b' }}>
+                            Shift {req.details.toShift} ({toShiftConf.start} - {toShiftConf.end})
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   // Tugas Keluar / Dinas
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -542,11 +816,26 @@ export function ModalViews({
         const tunjanganJabatan = empForPayslip.tunjanganJabatan || Math.round(salary * 0.08);
         const tunjanganTransport = empForPayslip.tunjanganTransport || Math.round(salary * 0.05);
         const totalTunjangan = tunjanganJabatan + tunjanganTransport;
+        const grossIncome = salary + totalTunjangan;
         const potonganKasbon = empForPayslip.potonganKasbon || 0;
-        const pajakPph21 = Math.round(salary * 0.03);
-        const totalPotongan = potonganKasbon + pajakPph21;
-        const netPay = salary + totalTunjangan - totalPotongan;
+
+        // BPJS karyawan
+        const bpjsKes = Math.round(Math.min(grossIncome, 12000000) * 0.01);
+        const bpjsJHT = Math.round(grossIncome * 0.02);
+        const bpjsJP  = Math.round(Math.min(grossIncome, 9559600) * 0.01);
+        const totalBpjs = bpjsKes + bpjsJHT + bpjsJP;
+
+        // PPh 21 via TER (PMK 168/2023)
+        const pphResult = calculatePph21(empForPayslip, grossIncome, 'gross');
+        const pajakPph21 = pphResult.pphAmount;
+        const ptkpCat = pphResult.category;
+        const catColors = { A: { bg: '#e0f2fe', color: '#0369a1' }, B: { bg: '#f3e8ff', color: '#7c3aed' }, C: { bg: '#fce7f3', color: '#be185d' } };
+        const catStyle = catColors[ptkpCat] || catColors.A;
+
+        const totalPotongan = totalBpjs + potonganKasbon + pajakPph21;
+        const netPay = grossIncome - totalPotongan;
         const isLocked = empForPayslip.isSalaryLocked || false;
+
 
         return (
           <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1003, justifyContent: 'center', alignItems: 'center' }}>
@@ -584,10 +873,32 @@ export function ModalViews({
                 </div>
                 <div>
                   <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-danger)', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px', marginBottom: '8px' }}>POTONGAN (-)</h4>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
-                    <span>Pajak PPh 21:</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px', color: 'var(--text-secondary)' }}>
+                    <span>BPJS Kesehatan (1%):</span>
+                    <span>Rp {bpjsKes.toLocaleString('id-ID')}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px', color: 'var(--text-secondary)' }}>
+                    <span>BPJS JHT (2%):</span>
+                    <span>Rp {bpjsJHT.toLocaleString('id-ID')}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px dashed var(--color-border)', color: 'var(--text-secondary)' }}>
+                    <span>BPJS JP (1%):</span>
+                    <span>Rp {bpjsJP.toLocaleString('id-ID')}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px', fontWeight: 600 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      PPh 21
+                      <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: catStyle.bg, color: catStyle.color }}>
+                        TER {ptkpCat} · {pphResult.terRatePercent}
+                      </span>
+                    </span>
                     <span>Rp {pajakPph21.toLocaleString('id-ID')}</span>
                   </div>
+                  {pphResult.npwpPenalty && (
+                    <div style={{ fontSize: '10px', color: '#b45309', backgroundColor: '#fef3c7', padding: '4px 8px', borderRadius: '4px', marginBottom: '6px' }}>
+                      ⚠ Penalti 20% diterapkan (tidak memiliki NPWP)
+                    </div>
+                  )}
                   {potonganKasbon > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
                       <span>Potongan Kasbon:</span>
@@ -610,31 +921,162 @@ export function ModalViews({
               )}
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
-                {isLocked && (
-                  <button 
-                    className="btn-primary" 
-                    style={{ 
-                      width: 'auto', 
-                      padding: '8px 16px', 
-                      backgroundColor: '#2563EB', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '8px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '6px',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      fontSize: '12px'
-                    }} 
-                    onClick={() => {
-                      alert(`Mengunduh slip gaji digital resmi format PDF untuk ${empForPayslip.name} (Periode Juli 2026)...`);
-                    }}
-                  >
-                    <ion-icon name="download-outline"></ion-icon>
-                    <span>Download PDF</span>
-                  </button>
-                )}
+                <button 
+                  className="btn-primary" 
+                  style={{ 
+                    width: 'auto', 
+                    padding: '8px 16px', 
+                    backgroundColor: '#1E293B', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '8px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '12px'
+                  }} 
+                  onClick={() => {
+                    const hasNpwp = pphResult.hasNpwp;
+                    const htmlContent = `
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <title>Slip Gaji - ${empForPayslip.name || ''}</title>
+                          <style>
+                            body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #334155; padding: 40px; line-height: 1.6; background-color: #f8fafc; }
+                            .payslip-container { background: white; max-width: 800px; margin: 0 auto; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+                            .print-header-actions { max-width: 800px; margin: 0 auto 20px; display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 12px 24px; border-radius: 8px; color: white; }
+                            .print-btn { background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; }
+                            .print-btn:hover { background: #0369a1; }
+                            .header { text-align: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 20px; margin-bottom: 20px; }
+                            .company-name { font-size: 24px; font-weight: 800; color: #0284c7; margin: 0; }
+                            .doc-title { font-size: 14px; color: #64748b; margin: 5px 0 0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+                            .meta-table { width: 100%; margin-bottom: 30px; font-size: 14px; }
+                            .meta-table td { padding: 6px 0; }
+                            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+                            .section-title { font-size: 13px; font-weight: 800; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; }
+                            .income-title { color: #16a34a; }
+                            .deduction-title { color: #dc2626; }
+                            .row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+                            .row.sub { color: #64748b; font-size: 12px; padding-left: 10px; }
+                            .total-box { display: flex; justify-content: space-between; border-top: 2px dashed #cbd5e1; padding-top: 20px; margin-top: 20px; font-size: 16px; font-weight: 800; color: #0f172a; }
+                            @media print {
+                              body { background-color: white; padding: 0; }
+                              .payslip-container { box-shadow: none; border: none; padding: 0; }
+                              .print-header-actions { display: none; }
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <div class="print-header-actions">
+                            <span style="font-size: 14px; font-weight: 600;">Slip Gaji - Panorama HR</span>
+                            <button class="print-btn" onclick="window.print()">Cetak / Simpan PDF</button>
+                          </div>
+                          
+                          <div class="payslip-container">
+                            <div class="header">
+                              <h1 class="company-name">PANORAMA HR</h1>
+                              <p class="doc-title">SLIP GAJI RESMI</p>
+                            </div>
+                            
+                            <table class="meta-table">
+                              <tr>
+                                <td style="width: 15%"><strong>Nama</strong></td>
+                                <td style="width: 35%">: ${empForPayslip.name || ''}</td>
+                                <td style="width: 15%"><strong>Periode</strong></td>
+                                <td style="width: 35%">: Juli 2026</td>
+                              </tr>
+                              <tr>
+                                <td><strong>Jabatan</strong></td>
+                                <td>: ${empForPayslip.role || ''}</td>
+                                <td><strong>Kategori TER</strong></td>
+                                <td>: Kategori ${ptkpCat} (${empForPayslip.ptkpStatus || 'TK/0'})</td>
+                              </tr>
+                              <tr>
+                                <td><strong>Divisi</strong></td>
+                                <td>: ${empForPayslip.division || '-'}</td>
+                                <td><strong>Status NPWP</strong></td>
+                                <td>: ${hasNpwp ? 'Memiliki NPWP' : 'Tidak Memiliki NPWP (Penalti 20%)'}</td>
+                              </tr>
+                            </table>
+
+                            <div class="grid">
+                              <div>
+                                <h3 class="section-title income-title">PENERIMAAN (+)</h3>
+                                <div class="row">
+                                  <span>Gaji Pokok:</span>
+                                  <span>Rp ${salary.toLocaleString('id-ID')}</span>
+                                </div>
+                                <div class="row">
+                                  <span>Tunjangan Jabatan:</span>
+                                  <span>Rp ${tunjanganJabatan.toLocaleString('id-ID')}</span>
+                                </div>
+                                <div class="row">
+                                  <span>Tunjangan Transport:</span>
+                                  <span>Rp ${tunjanganTransport.toLocaleString('id-ID')}</span>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <h3 class="section-title deduction-title">POTONGAN (-)</h3>
+                                <div class="row" style="font-weight: 600; margin-bottom: 2px;">
+                                  <span>Iuran BPJS Kesehatan & Ketenagakerjaan:</span>
+                                  <span>Rp ${totalBpjs.toLocaleString('id-ID')}</span>
+                                </div>
+                                <div class="row sub">
+                                  <span>BPJS Kesehatan (1%):</span>
+                                  <span>Rp ${bpjsKes.toLocaleString('id-ID')}</span>
+                                </div>
+                                <div class="row sub">
+                                  <span>BPJS JHT (2%):</span>
+                                  <span>Rp ${bpjsJHT.toLocaleString('id-ID')}</span>
+                                </div>
+                                <div class="row sub">
+                                  <span>BPJS JP (1%):</span>
+                                  <span>Rp ${bpjsJP.toLocaleString('id-ID')}</span>
+                                </div>
+                                <div class="row" style="margin-top: 10px; font-weight: 600;">
+                                  <span>Pajak Penghasilan (PPh 21):</span>
+                                  <span>Rp ${pajakPph21.toLocaleString('id-ID')}</span>
+                                </div>
+                                ${pphResult.npwpPenalty ? `
+                                  <div class="row sub" style="color: #b45309;">
+                                    <span>* Termasuk Penalti 20% tanpa NPWP</span>
+                                  </div>
+                                ` : ''}
+                                ${potonganKasbon > 0 ? `
+                                  <div class="row" style="margin-top: 10px;">
+                                    <span>Potongan Kasbon:</span>
+                                    <span>Rp ${potonganKasbon.toLocaleString('id-ID')}</span>
+                                  </div>
+                                ` : ''}
+                              </div>
+                            </div>
+
+                            <div class="total-box">
+                              <span>TAKE HOME PAY (NET):</span>
+                              <span>Rp ${netPay.toLocaleString('id-ID')}</span>
+                            </div>
+                          </div>
+
+                          <script>
+                            setTimeout(function() {
+                              window.print();
+                            }, 500);
+                          </script>
+                        </body>
+                      </html>
+                    `;
+                    const blob = new Blob([htmlContent], { type: 'text/html' });
+                    const blobUrl = URL.createObjectURL(blob);
+                    window.open(blobUrl, '_blank');
+                  }}
+                >
+                  <ion-icon name="print-outline"></ion-icon>
+                  <span>Cetak / PDF</span>
+                </button>
                 <button className="pending-btn reject" style={{ width: 'auto', padding: '8px 16px', margin: 0, borderRadius: '8px' }} onClick={() => setActiveModal(null)}>Tutup</button>
               </div>
             </div>
@@ -816,7 +1258,7 @@ export function ModalViews({
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px', justifyContent: 'flex-end' }}>
               <button className="pending-btn reject" onClick={() => setActiveModal(null)} style={{ width: '100px', height: '38px', margin: 0 }}>Batal</button>
               <button className="btn-primary" style={{ height: '38px', width: 'auto', padding: '0 20px' }} onClick={() => {
-                const link = `http://localhost:5173/register?role=${encodeURIComponent(inviteRole)}&div=${encodeURIComponent(inviteDiv)}&contract=${inviteContract}&start=${inviteStartDate}&code=${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+                const link = `http://localhost:3000/register?role=${encodeURIComponent(inviteRole)}&div=${encodeURIComponent(inviteDiv)}&contract=${inviteContract}&start=${inviteStartDate}&code=${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
                 setMagicLink(link);
                 showToast('Link Pendaftaran Mandiri berhasil digenerate.');
               }}>
@@ -827,8 +1269,166 @@ export function ModalViews({
         </div>
       )}
 
+      {/* ===== EMPLOYEE DETAIL MODAL ===== */}
+      {activeModal === 'emp_detail' && (() => {
+        const statusColor = { 'Hadir': '#059669', 'Cuti Sakit': '#D97706', 'Alpha': '#DC2626', 'Terlambat': '#D97706' }[emp.status] || '#64748b';
+        const ptkpCat = getPtkpCategory(emp.ptkpStatus || 'TK/0');
+        const catColors = { A: { bg: '#e0f2fe', color: '#0369a1' }, B: { bg: '#f3e8ff', color: '#7c3aed' }, C: { bg: '#fce7f3', color: '#be185d' } };
+        const catStyle = catColors[ptkpCat] || catColors.A;
+        const hasNpwp = !!(emp.npwpNumber && emp.npwpNumber.trim() !== '' && emp.npwpNumber.trim() !== '-');
+
+        const InfoRow = ({ label, value }) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</span>
+            <input 
+              type="text" 
+              className="form-input" 
+              value={value || '-'} 
+              readOnly 
+              style={{ 
+                backgroundColor: '#f8fafc', 
+                color: 'var(--text-main)', 
+                borderColor: '#e2e8f0', 
+                cursor: 'default',
+                fontSize: '12px',
+                height: '36px',
+                fontWeight: 500
+              }} 
+            />
+          </div>
+        );
+
+        return (
+          <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.45)', zIndex: 1003, justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+            <div style={{ width: '780px', maxHeight: '92vh', overflowY: 'auto', backgroundColor: 'white', borderRadius: '18px', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column' }}>
+
+              {/* Header */}
+              <div style={{ padding: '24px 28px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '16px', background: 'linear-gradient(135deg, #f0f9ff 0%, #fafafa 100%)' }}>
+                <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'linear-gradient(135deg, var(--color-primary) 0%, #0369a1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '20px', fontWeight: 800, flexShrink: 0 }}>
+                  {emp.name ? emp.name.split(' ').map(n => n[0]).join('').slice(0, 2) : '?'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>{emp.name}</h2>
+                  <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>{emp.role} · {emp.division} · {emp.branch || '-'}</p>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', backgroundColor: '#e0f2fe', color: '#0369a1' }}>{emp.contractType || 'PKWT'}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', backgroundColor: '#dcfce7', color: '#15803d' }}>{emp.employeeStatus || 'Aktif'}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', backgroundColor: '#fef3c7', color: statusColor }}>{emp.status || 'Hadir'}</span>
+                  </div>
+                </div>
+                <button onClick={() => setActiveModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: '8px', color: 'var(--text-secondary)' }}>
+                  <ion-icon name="close-outline" style={{ fontSize: '24px' }}></ion-icon>
+                </button>
+              </div>
+
+              {/* Body */}
+              <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+                {/* Section 1: Data Pribadi */}
+                <div>
+                  <h4 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ion-icon name="person-outline" style={{ fontSize: '14px' }}></ion-icon>
+                    Data Pribadi
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+                    <InfoRow label="ID Karyawan" value={emp.id} />
+                    <InfoRow label="NIK / KTP" value={emp.nikKtp} />
+                    <InfoRow label="Email" value={emp.email} />
+                    <InfoRow label="Tempat Lahir" value={emp.placeOfBirth} />
+                    <InfoRow label="Tanggal Lahir" value={emp.dateOfBirth} />
+                    <InfoRow label="Jenis Kelamin" value={emp.gender} />
+                    <InfoRow label="Agama" value={emp.religion} />
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <InfoRow label="Alamat Domisili" value={emp.domicileAddress} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Finansial & Bank */}
+                <div>
+                  <h4 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 700, color: '#7c3aed', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ion-icon name="card-outline" style={{ fontSize: '14px' }}></ion-icon>
+                    Finansial &amp; Rekening Bank
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+                    <InfoRow label="Gaji Pokok" value={emp.salary ? `Rp ${emp.salary.toLocaleString('id-ID')}` : '-'} />
+                    <InfoRow label="Bank" value={emp.bankName} />
+                    <InfoRow label="No. Rekening" value={emp.bankAccountNumber} />
+                    <InfoRow label="Pemilik Rekening" value={emp.bankAccountHolder} />
+                    <InfoRow label="No. BPJS Kesehatan" value={emp.bpjsKesehatanNumber} />
+                    <InfoRow label="No. BPJS Ketenagakerjaan" value={emp.bpjsNakerNumber} />
+                  </div>
+                </div>
+
+                {/* Section 3: Data Pajak */}
+                <div style={{ border: '1px solid #fbcfe8', borderRadius: '10px', overflow: 'hidden' }}>
+                  <div style={{ padding: '10px 16px', backgroundColor: '#fce7f3', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ion-icon name="receipt-outline" style={{ fontSize: '16px', color: '#be185d' }}></ion-icon>
+                    <h4 style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#be185d' }}>Data Pajak (PPh 21)</h4>
+                  </div>
+                  <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+                    <div>
+                      <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Status PTKP</span>
+                      <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>{emp.ptkpStatus || 'TK/0'}</span>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Kategori TER</span>
+                      <span style={{ fontSize: '13px', fontWeight: 800, padding: '3px 10px', borderRadius: '6px', backgroundColor: catStyle.bg, color: catStyle.color }}>Kategori {ptkpCat}</span>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>NPWP</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--text-main)' }}>{emp.npwpNumber || 'Tidak ada'}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', backgroundColor: hasNpwp ? '#dcfce7' : '#fee2e2', color: hasNpwp ? '#15803d' : '#dc2626' }}>
+                          {hasNpwp ? '✓ Valid' : '⚠ Penalti 20%'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Kontak Darurat */}
+                {(emp.emergencyName || emp.emergencyPhone) && (
+                  <div>
+                    <h4 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 700, color: '#dc2626', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ion-icon name="call-outline" style={{ fontSize: '14px' }}></ion-icon>
+                      Kontak Darurat
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+                      <InfoRow label="Nama" value={emp.emergencyName} />
+                      <InfoRow label="Hubungan" value={emp.emergencyRelation} />
+                      <InfoRow label="No. Telepon" value={emp.emergencyPhone} />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div style={{ padding: '16px 28px', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: '10px', backgroundColor: '#fafafa' }}>
+                <button
+                  style={{ height: '36px', padding: '0 16px', background: 'none', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: 'var(--text-secondary)', fontFamily: 'inherit' }}
+                  onClick={() => setActiveModal(null)}
+                >
+                  Tutup
+                </button>
+                <button
+                  style={{ height: '36px', padding: '0 18px', background: 'linear-gradient(135deg, var(--color-primary) 0%, #0369a1 100%)', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', color: 'white', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={() => {
+                    setActiveModal('edit_salary');
+                  }}
+                >
+                  <ion-icon name="create-outline" style={{ fontSize: '14px' }}></ion-icon>
+                  Edit Gaji &amp; Pajak
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Edit Salary & Compensation Modal */}
       {activeModal === 'edit_salary' && (
+
         <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1000, justifyContent: 'center', alignItems: 'center' }}>
           <div className="glass-card" style={{ width: '700px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'white', borderRadius: '16px', maxHeight: '90vh' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: '4px' }}>
@@ -925,9 +1525,11 @@ export function ModalViews({
                 </div>
               </div>
 
+              <TaxPanel emp={emp} store={store} />
+
               {/* Part 3: Change History Logs */}
               <div>
-                <h5 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '8px', borderBottom: '1px solid var(--color-border)', paddingBottom: '4px' }}>3. Histori Perubahan Gaji & Log Audit</h5>
+                <h5 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '8px', borderBottom: '1px solid var(--color-border)', paddingBottom: '4px' }}>3. Histori Perubahan Gaji &amp; Log Audit</h5>
                 {emp.salaryHistory && emp.salaryHistory.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--color-border)', padding: '12px', borderRadius: '8px', backgroundColor: '#F8FAFC' }}>
                     {emp.salaryHistory.map((log, idx) => (
@@ -979,6 +1581,37 @@ export function ModalViews({
               >
                 Simpan Perubahan
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile & Details Modal */}
+      {activeModal === 'edit_profile' && (
+        <div className="modal-backdrop" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15,23,42,0.4)', zIndex: 1000, justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '700px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'white', borderRadius: '16px', maxHeight: '90vh' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: '4px' }}>
+              <h3 className="chart-title" style={{ margin: 0 }}>Ubah Profil Karyawan</h3>
+              <ion-icon name="close-outline" onClick={() => setActiveModal(null)} style={{ fontSize: '24px', cursor: 'pointer', color: 'var(--color-gray-400)' }}></ion-icon>
+            </div>
+
+            {/* Scrollable Form Body Container */}
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '6px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ backgroundColor: 'var(--color-gray-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px' }}>
+                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{emp.name}</p>
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>Jabatan: {emp.role} • Divisi: {emp.division}</p>
+              </div>
+
+              {/* Embed profile input blocks */}
+              <ProfileEditPanel emp={emp} store={store} showToast={(msg) => {
+                showToast(msg);
+                setActiveModal(null);
+              }} />
+            </div>
+
+            {/* Fixed Footer Buttons Container */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--color-border)', paddingTop: '16px', marginTop: '4px' }}>
+              <button className="pending-btn reject" onClick={() => setActiveModal(null)} style={{ width: '100px', height: '38px', margin: 0 }}>Tutup</button>
             </div>
           </div>
         </div>
