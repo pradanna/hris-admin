@@ -7,8 +7,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       title: 'DATA MASTER',
       items: [
         { id: 'dashboard', label: 'Home / Dashboard', icon: 'home-outline' },
-        { id: 'employees', label: 'Data Karyawan', icon: 'people-outline', badge: 'New' },
-        { id: 'master_data', label: 'Departemen & Jabatan', icon: 'git-branch-outline' }
+        { id: 'master_data', label: 'Departemen & Jabatan', icon: 'git-branch-outline' },
+        { id: 'employees', label: 'Data Karyawan', icon: 'people-outline', badge: 'New' }
       ]
     },
     {
