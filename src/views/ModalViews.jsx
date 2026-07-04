@@ -1258,7 +1258,8 @@ export function ModalViews({
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px', justifyContent: 'flex-end' }}>
               <button className="pending-btn reject" onClick={() => setActiveModal(null)} style={{ width: '100px', height: '38px', margin: 0 }}>Batal</button>
               <button className="btn-primary" style={{ height: '38px', width: 'auto', padding: '0 20px' }} onClick={() => {
-                const link = `http://localhost:3000/register?role=${encodeURIComponent(inviteRole)}&div=${encodeURIComponent(inviteDiv)}&contract=${inviteContract}&start=${inviteStartDate}&code=${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+                const baseUrl = window.location.origin || 'https://hris-admin-five.vercel.app';
+                const link = `${baseUrl}/register?role=${encodeURIComponent(inviteRole)}&div=${encodeURIComponent(inviteDiv)}&contract=${inviteContract}&start=${inviteStartDate}&code=${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
                 setMagicLink(link);
                 showToast('Link Pendaftaran Mandiri berhasil digenerate.');
               }}>
